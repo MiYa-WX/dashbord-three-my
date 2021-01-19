@@ -1,0 +1,154 @@
+<template>
+  <div class="dashboard-container">
+    <div class="dashboard-text">Threejs First Demo </div>
+
+    <div id="threeTest"> </div>
+  </div>
+</template>
+
+<script>
+import * as THREE from 'three'
+// 引入轨道控制器组件，可以使得相机围绕目标进行轨道运动
+// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
+const OrbitControls = require('three-orbit-controls')(THREE)
+
+// // 引入加载器，用于glTF格式的的模型添加
+// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
+
+// import { ThreeMFLoader } from './jsm/loaders/3MFLoader.js'
+import { ThreeMFLoader } from 'three-obj-mtl-loader'
+
+export default {
+  name: '3mfMaterials',
+  data() {
+    return {
+      scene: null,
+      camera: null,
+      renderer: null
+    }
+  },
+  mounted() {
+    this.init()
+  },
+  destroyed() {
+    window.removeEventListener('resize', this.onWindowResize)
+  },
+
+  methods: {
+    init() {
+      this.scene = new THREE.Scene()
+      this.scene.background = new THREE.Color(0xa0a0a0)
+      this.scene.fog = new THREE.Fog(0xa0a0a0, 10, 500)
+
+      this.camera = new THREE.PerspectiveCamera(
+        35,
+        window.innerWidth / window.innerHeight,
+        1,
+        500
+      )
+      this.camera.position.set(-50, 40, 50)
+      this.scene.add(this.camera)
+
+      //
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444)
+      hemiLight.position.set(0, 100, 0)
+      this.scene.add(hemiLight)
+
+      const dirLight = new THREE.DirectionalLight(0xffffff)
+      dirLight.position.set(-0, 40, 50)
+      dirLight.castShadow = true
+      dirLight.shadow.camera.top = 50
+      dirLight.shadow.camera.bottom = -25
+      dirLight.shadow.camera.left = -25
+      dirLight.shadow.camera.right = 25
+      dirLight.shadow.camera.near = 0.1
+      dirLight.shadow.camera.far = 200
+      dirLight.shadow.mapSize.set(1024, 1024)
+      this.scene.add(dirLight)
+
+      // scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+
+      //
+
+      const manager = new THREE.LoadingManager()
+
+      const loader = new ThreeMFLoader(manager)
+      loader.load('./models/3mf/truck.3mf', function(object) {
+        object.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)) // z-up conversion
+
+        object.traverse(function(child) {
+          child.castShadow = true
+        })
+
+        this.scene.add(object)
+      })
+
+      //
+
+      manager.onLoad = function() {
+        this.render()
+      }
+
+      //
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneBufferGeometry(1000, 1000),
+        new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
+      )
+      ground.rotation.x = -Math.PI / 2
+      ground.position.y = 11
+      ground.receiveShadow = true
+      this.scene.add(ground)
+
+      //
+
+      this.renderer = new THREE.WebGLRenderer({ antialias: true })
+      this.renderer.setPixelRatio(window.devicePixelRatio)
+      this.renderer.setSize(window.innerWidth, window.innerHeight)
+      this.renderer.outputEncoding = THREE.sRGBEncoding
+      this.renderer.shadowMap.enabled = true
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+      const container = document.getElementById('threeTest') // 获取DOM元素threeTest
+      container.appendChild(this.renderer.domElement) // body元素中插入canvas对象
+
+      //
+
+      const controls = new OrbitControls(this.camera, this.renderer.domElement)
+      controls.addEventListener('change', this.render)
+      controls.minDistance = 50
+      controls.maxDistance = 200
+      controls.enablePan = false
+      controls.target.set(0, 20, 0)
+      controls.update()
+
+      window.addEventListener('resize', this.onWindowResize, false)
+
+      this.render()
+    },
+    onWindowResize() {
+      this.camera.aspect = window.innerWidth / window.innerHeight
+      this.camera.updateProjectionMatrix()
+
+      this.renderer.setSize(window.innerWidth, window.innerHeight)
+
+      this.render()
+    },
+    render() {
+      this.renderer.render(this.scene, this.camera)
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.dashboard {
+  &-container {
+    margin: 30px;
+  }
+  &-text {
+    font-size: 30px;
+    line-height: 46px;
+  }
+}
+</style>
