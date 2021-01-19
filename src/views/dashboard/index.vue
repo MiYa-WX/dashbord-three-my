@@ -9,11 +9,7 @@
 <script>
 import * as THREE from 'three'
 // 引入轨道控制器组件，可以使得相机围绕目标进行轨道运动
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
-// const OrbitControls = require("three-orbit-controls")(THREE)
-
-// // 引入加载器，用于glTF格式的的模型添加
-// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 export default {
   name: 'Dashboard',
@@ -23,8 +19,8 @@ export default {
       camera: null,
       mesh: null,
       renderer: null,
-      meshSphere: null
-      // controls: null
+      meshSphere: null,
+      controls: null
     }
   },
   mounted() {
@@ -88,12 +84,6 @@ export default {
       this.camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000)
       this.camera.position.set(150, 300, 200) // 设置相机位置
       this.camera.lookAt(this.scene.position) // 设置相机方向(指向的场景对象)
-      // // 创建控制器对象
-      // this.controls = new OrbitControls(
-      //   this.camera,
-      //   this.renderer.domElement
-      // )
-      // this.controls.update()
 
       /**
        * 创建渲染器对象
@@ -102,12 +92,13 @@ export default {
       this.renderer.setSize(width, height * 0.8) // 设置渲染区域尺寸
       this.renderer.setClearColor('#b9d3ff', 1) // 设置背景颜色
       const container = document.getElementById('threeTest') // 获取DOM元素threeTest
-      container.appendChild(this.renderer.domElement) // body元素中插入canvas对象
+      container.appendChild(this.renderer.domElement) // threeTest元素中插入canvas对象
 
+      // 创建控制器对象,要在插入canvas对象
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+      this.controls.update()
       this.animationRender()
       window.addEventListener('resize', this.onWindowResize) // 添加窗口监听事件（resize-onresize即窗口或框架被重新调整大小）
-
-      // const controls = new THREE.OrbitControls()
     },
     animationRender() {
       // 执行渲染操作   指定场景、相机作为参数
@@ -131,7 +122,7 @@ export default {
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(width, height * 0.8) // 设置渲染区域尺寸
       // this.labelRenderer.setSize(width, height)
-      // this.controls.update()
+      this.controls.update()
     }
   }
 }

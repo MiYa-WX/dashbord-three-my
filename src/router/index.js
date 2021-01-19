@@ -64,10 +64,16 @@ export const constantRoutes = [
     meta: { title: 'Threejs', icon: 'el-icon-s-goods' },
     children: [
       {
-        path: '3mfMaterials',
-        name: '3mfMaterials',
-        component: () => import('@/views/threejs/3mfMaterials'),
-        meta: { title: 'Table', icon: 'table' }
+        path: 'materials',
+        name: 'Materials',
+        component: () => import('@/views/threejs/materials'),
+        meta: { title: '3mfMaterials', icon: 'el-icon-data-board' }
+      },
+      {
+        path: 'meetingRoom',
+        name: 'MeetingRoom',
+        component: () => import('@/views/threejs/meetingRoom'),
+        meta: { title: 'meetingRoom', icon: 'el-icon-data-board' }
       }
     ]
   },

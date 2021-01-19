@@ -1,7 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">Threejs First Demo </div>
-
+    <div class="dashboard-text">Threejs loaders_3mf_materials Demo </div>
     <div id="threeTest"> </div>
   </div>
 </template>
@@ -9,17 +8,17 @@
 <script>
 import * as THREE from 'three'
 // 引入轨道控制器组件，可以使得相机围绕目标进行轨道运动
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
-const OrbitControls = require('three-orbit-controls')(THREE)
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // // 引入加载器，用于glTF格式的的模型添加
 // import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
 
-// import { ThreeMFLoader } from './jsm/loaders/3MFLoader.js'
-import { ThreeMFLoader } from 'three-obj-mtl-loader'
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
+
+// import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
 
 export default {
-  name: '3mfMaterials',
+  name: 'Materials',
   data() {
     return {
       scene: null,
@@ -37,8 +36,6 @@ export default {
   methods: {
     init() {
       this.scene = new THREE.Scene()
-      this.scene.background = new THREE.Color(0xa0a0a0)
-      this.scene.fog = new THREE.Fog(0xa0a0a0, 10, 500)
 
       this.camera = new THREE.PerspectiveCamera(
         35,
@@ -46,6 +43,12 @@ export default {
         1,
         500
       )
+
+      this.renderer = new THREE.WebGLRenderer({ antialias: true })
+
+      this.scene.background = new THREE.Color(0xa0a0a0)
+      this.scene.fog = new THREE.Fog(0xa0a0a0, 10, 500)
+
       this.camera.position.set(-50, 40, 50)
       this.scene.add(this.camera)
 
@@ -74,10 +77,12 @@ export default {
       const manager = new THREE.LoadingManager()
 
       const loader = new ThreeMFLoader(manager)
-      loader.load('./models/3mf/truck.3mf', function(object) {
+      // loader.setPath('')
+
+      loader.load('/models/3mf/truck.3mf', (object) => {
         object.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)) // z-up conversion
 
-        object.traverse(function(child) {
+        object.traverse((child) => {
           child.castShadow = true
         })
 
@@ -86,7 +91,7 @@ export default {
 
       //
 
-      manager.onLoad = function() {
+      manager.onLoad = () => {
         this.render()
       }
 
@@ -103,7 +108,6 @@ export default {
 
       //
 
-      this.renderer = new THREE.WebGLRenderer({ antialias: true })
       this.renderer.setPixelRatio(window.devicePixelRatio)
       this.renderer.setSize(window.innerWidth, window.innerHeight)
       this.renderer.outputEncoding = THREE.sRGBEncoding
