@@ -1,5 +1,5 @@
 <template>
-  <div id="threeworld"> </div>
+  <div id="threeWorld"> </div>
 </template>
 
 <script>
@@ -7,8 +7,7 @@ import * as THREE from 'three'
 const ThreeBSP = require('three-js-csg')(THREE)
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-const TWEEN = require('@tweenjs/tween.js')
-
+import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 export default {
   name: 'MeetingRoom',
   data() {
@@ -27,7 +26,7 @@ export default {
     }
   },
   mounted() {
-    this.threeDom = document.getElementById('threeworld')
+    this.threeDom = document.getElementById('threeWorld')
     this.init()
     this.addGeoBox()
     // 墙以及门
@@ -44,8 +43,8 @@ export default {
     this.createPottedPlant()
     // 壁画
     this.createLargeScreen()
-    // // 三维文字
-    // this.createText()
+    // 三维文字
+    this.createText()
     // 鼠标事件
     document.addEventListener('mousedown', this.onDocumentMouseDown, false)
     window.addEventListener('resize', this.onWindowResize, false)
@@ -119,7 +118,6 @@ export default {
 
       // 鼠标键盘控制
       this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-
       // 点光源
       const point = new THREE.PointLight(0xffffff)
       point.position.set(500, 300, 400) // 点光源位置
@@ -729,27 +727,21 @@ export default {
      **/
     createText() {
       this.fontload = new THREE.FontLoader()
-      this.fontload.load(
-        // '/mythree/static/fonts/MI LANTING_Regular.json',
-        'three/examples/fonts/helvetiker_bold.typeface.json',
-        (response) => {
-          const options = {
-            size: 18,
-            height: 10,
-            font: response
-          }
-          const textGeom = new THREE.TextGeometry(
-            '保密就是保安全,保发展',
-            options
-          )
-          const textMaterial = new THREE.MeshBasicMaterial({ color: 'red' })
-          const textMesh = new THREE.Mesh(textGeom, textMaterial)
-          textMesh.position.set(-140, 80, 100)
-          textMesh.rotation.y = 0.5 * Math.PI
-          textMesh.name = 'textMesh-' + this.scene.children.length
-          this.scene.add(textMesh)
-        }
-      )
+      const fontUrl = '/source/fonts/helvetiker_regular.typeface.json'
+      this.fontload.load(fontUrl, (font) => {
+        const textGeom = new THREE.TextBufferGeometry('This is Meeting Room', {
+          font: font,
+          size: 18,
+          height: 10
+        })
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 'red' })
+        const textMesh = new THREE.Mesh(textGeom, textMaterial)
+        textMesh.position.set(-140, 80, 100)
+        textMesh.rotation.y = 0.5 * Math.PI
+        textMesh.name = 'textMesh-' + this.scene.children.length
+
+        this.scene.add(textMesh)
+      })
     },
 
     /**
@@ -804,7 +796,7 @@ export default {
 </script>
 
 <style scoped>
-#threeworld {
+#threeWorld {
   height: 100%;
   width: 100%;
 }
