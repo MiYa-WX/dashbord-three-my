@@ -74,6 +74,24 @@ export const constantRoutes = [
         name: 'MeetingRoom',
         component: () => import('@/views/threejs/meetingRoom'),
         meta: { title: 'meetingRoom', icon: 'el-icon-data-board' }
+      },
+      {
+        path: 'computerRoom',
+        name: 'ComputerRoom',
+        component: () => import('@/views/threejs/computerRoom'),
+        meta: { title: 'computerRoom', icon: 'el-icon-data-board' }
+      },
+      {
+        path: 'demo',
+        name: 'Demo',
+        component: () => import('@/views/threejs/demo'),
+        meta: { title: 'demo', icon: 'el-icon-data-board' }
+      },
+      {
+        path: 'clickDemo',
+        name: 'ClickDemo',
+        component: () => import('@/views/threejs/clickDemo'),
+        meta: { title: 'clickDemo', icon: 'el-icon-data-board' }
       }
     ]
   },

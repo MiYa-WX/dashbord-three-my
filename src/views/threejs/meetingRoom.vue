@@ -36,7 +36,6 @@ export default {
     this.createWindowLeft()
     // 会议桌
     this.createConferenceTable()
-    this.rendererScene()
     // 椅子
     this.createChair()
     // 盆栽
@@ -45,6 +44,8 @@ export default {
     this.createLargeScreen()
     // 三维文字
     this.createText()
+    this.rendererScene()
+
     // 鼠标事件
     document.addEventListener('mousedown', this.onDocumentMouseDown, false)
     window.addEventListener('resize', this.onWindowResize, false)
@@ -56,9 +57,10 @@ export default {
   methods: {
     onWindowResize() {
       this.camera.aspect = window.innerWidth / window.innerHeight
+      // 更新摄像机投影矩阵。在任何参数被改变以后必须被调用。
       this.camera.updateProjectionMatrix()
 
-      this.renderer.setSize(this.threeDom.clientWidth, window.innerHeight)
+      this.renderer.setSize(this.threeDom.clientWidth, window.innerHeight - 60)
 
       // 兼容高清屏幕
       this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -69,7 +71,6 @@ export default {
      * @description: 描述主要功能
      * @returns 描述函数的返回值
      * @date: 2020/6/13  9:50
-     * @author: zyy
      **/
     init() {
       // 创建三大件
@@ -100,11 +101,10 @@ export default {
       this.scene.add(axes)
 
       // 设置环境
-      // this.renderer.setClearColor(new THREE.Color(0xf7f2f1))
-      this.renderer.setClearColor('#b9d3ff', 1) // 设置背景颜色
+      this.renderer.setClearColor(0xb9d3ff, 1) // 设置背景颜色及其透明度
 
       // 设置场景大小
-      this.renderer.setSize(this.threeDom.clientWidth, window.innerHeight)
+      this.renderer.setSize(this.threeDom.clientWidth, window.innerHeight - 60)
 
       // 兼容高清屏幕
       this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -119,9 +119,13 @@ export default {
       // 鼠标键盘控制
       this.controls = new OrbitControls(this.camera, this.renderer.domElement)
       // 点光源
-      const point = new THREE.PointLight(0xffffff)
-      point.position.set(500, 300, 400) // 点光源位置
-      this.scene.add(point) // 点光源添加到场景中
+      const light = new THREE.PointLight(0xffffff)
+      light.position.set(500, 300, 400) // 点光源位置
+
+      // // 平行光是沿着特定方向发射的光
+      // const light = new THREE.DirectionalLight(0xffffff)
+      // light.position.set(1, 0.75, 0.5).normalize()
+      this.scene.add(light) // 点光源添加到场景中
       //  环境光
       const ambient = new THREE.AmbientLight(0x999999)
       this.scene.add(ambient)
@@ -135,140 +139,10 @@ export default {
     },
 
     /**
-     * @description: 描述主要功能: 创建自定义的几何体，并贴上纹理，使用贴图材质
-     * @returns 描述函数的返回值
-     * @date: 2020/6/11  15:24
-     * @author: zyy
-     **/
-    customGeometry() {
-      // 下底面的点和上底面的点
-      const pointArr = []
-
-      // 底面点
-      for (let i = 0; i < 8; i++) {
-        const x = 60 * Math.sin((Math.PI * i) / 4)
-        const z = 60 * Math.cos((Math.PI * i) / 4)
-        const temp = {}
-        temp.x = x
-        temp.y = 0
-        temp.z = z
-        pointArr.push(temp)
-      }
-
-      // 上面点
-      for (let i = 0; i < 8; i++) {
-        const x = 58 * Math.sin((Math.PI * i) / 4)
-        const z = 58 * Math.cos((Math.PI * i) / 4)
-        const temp = {}
-        temp.x = x
-        temp.y = 1
-        temp.z = z
-        pointArr.push(temp)
-      }
-
-      // 创建顶点
-      const vertices = []
-      for (let i = 0; i < pointArr.length; i++) {
-        const temp = new THREE.Vector3(
-          pointArr[i].x,
-          pointArr[i].y,
-          pointArr[i].z
-        )
-        vertices.push(temp)
-      }
-
-      // 定义面
-      const faces = []
-
-      // 侧面 根据序号添加
-      const pointArrLen2 = pointArr.length / 2
-      const pointArrLen = pointArr.length
-      for (let j = 0; j < pointArrLen2; j++) {
-        if (j !== pointArrLen2 - 1) {
-          const tempFace1 = new THREE.Face3(j, j + pointArrLen2, j + 1)
-          const tempFace2 = new THREE.Face3(
-            j + 1,
-            j + pointArrLen2,
-            j + pointArrLen2 + 1
-          )
-          faces.push(tempFace1)
-          faces.push(tempFace2)
-        } else {
-          const tempFace1 = new THREE.Face3(j, j + pointArrLen2, j + 1)
-          const tempFace2 = new THREE.Face3(j + 1, 0, j)
-          faces.push(tempFace1)
-          faces.push(tempFace2)
-        }
-      }
-
-      // 底面
-      for (let m = 0; m < pointArrLen2; m++) {
-        if (m + 2 < pointArrLen2) {
-          const tempFace1 = new THREE.Face3(0, m + 1, m + 2)
-          faces.push(tempFace1)
-        }
-      }
-
-      // 上面
-      for (let n = pointArrLen2; n < pointArrLen; n++) {
-        if (n + 2 < pointArrLen) {
-          const tempFace1 = new THREE.Face3(pointArrLen2 - 1, n + 1, n + 2)
-          faces.push(tempFace1)
-        }
-      }
-
-      const geom = new THREE.Geometry()
-      geom.vertices = vertices
-      geom.faces = faces
-      geom.computeFaceNormals()
-
-      const mats = []
-      let material = null
-      const floorTexture = this.textureLoader.load(
-        '/source/textures/floor/floor.jpg'
-      )
-      const floorMaterial = new THREE.MeshStandardMaterial({
-        map: floorTexture,
-        metalness: 0.2,
-        roughness: 0.07,
-        side: THREE.DoubleSide
-      })
-      for (let i = 0; i < geom.faces.length; i++) {
-        // 定义侧面的材质
-        if (i < 4) {
-          material = new THREE.MeshBasicMaterial({
-            color: 0x9c9c9c,
-            side: THREE.DoubleSide
-          })
-          mats.push(material)
-        } else if (i >= 4 && i < 6) {
-          material = new THREE.MeshBasicMaterial({
-            color: 0x6b6b6b,
-            side: THREE.DoubleSide
-          })
-          mats.push(material)
-        } else if (i >= 6 && i < pointArrLen) {
-          material = new THREE.MeshBasicMaterial({
-            color: 0xd0d0d0,
-            side: THREE.DoubleSide
-          })
-          mats.push(material)
-        } else {
-          mats.push(floorMaterial)
-        }
-        geom.faces[i].materialIndex = i
-      }
-      const cube = new THREE.Mesh(geom, mats)
-      cube.position.set(0, 0, 0)
-      this.scene.add(cube)
-    },
-
-    /**
      * @description: 描述主要功能: 创建一个box，并对不同的面使用不同的材质。
      * 生成地板
      * @returns 描述函数的返回值
      * @date: 2020/6/13  10:56
-     * @author: zyy
      **/
     addGeoBox() {
       // 创建材质并贴上纹理
@@ -276,10 +150,10 @@ export default {
         '/source/textures/floor/floor.jpg'
       )
       const boxTextureMaterial = new THREE.MeshStandardMaterial({
-        map: floorTexture,
-        metalness: 0.2,
-        roughness: 0.07,
-        side: THREE.DoubleSide
+        map: floorTexture, // 颜色贴图
+        metalness: 0.2, // 材质与金属的相似度
+        roughness: 0.7, // 材质的粗糙程度
+        side: THREE.DoubleSide // 定义将要渲染哪一面：正面(THREE.BackSide)，背面(THREE.FrontSide)或两者(THREE.DoubleSide)
       })
       // 创建地板
       for (let i = 0; i < 12; i++) {
@@ -297,7 +171,6 @@ export default {
      * 使用BSP二元操作，扣除box内部
      * @returns 描述函数的返回值
      * @date: 2020/6/13  11:46
-     * @author: zyy
      **/
     createWall() {
       // 外墙
@@ -377,10 +250,9 @@ export default {
      * @description: 描述主要功能 生成右侧窗户
      * @returns 描述函数的返回值
      * @date: 2020/6/13  15:03
-     * @author: zyy
      **/
     createWindowRight() {
-      const shpMaterial1 = new THREE.MeshBasicMaterial({ color: '#F7C777' })
+      const shpMaterial1 = new THREE.MeshBasicMaterial({ color: 0xf7c777 })
       const shpGeometry1 = new THREE.BoxGeometry(70, 90, 10)
       const shpMesh1 = new THREE.Mesh(shpGeometry1, shpMaterial1)
       shpMesh1.position.set(-40, 65, -213)
@@ -408,10 +280,9 @@ export default {
      * @description: 描述主要功能 生成左侧窗户
      * @returns 描述函数的返回值
      * @date: 2020/6/13  16:00
-     * @author: zyy
      **/
     createWindowLeft() {
-      const shpMaterial1 = new THREE.MeshBasicMaterial({ color: '#F7C777' })
+      const shpMaterial1 = new THREE.MeshBasicMaterial({ color: 0xf7c777 })
       const shpGeometry1 = new THREE.BoxGeometry(70, 90, 10)
       const shpMesh1 = new THREE.Mesh(shpGeometry1, shpMaterial1)
       shpMesh1.position.set(40, 65, -213)
@@ -443,7 +314,6 @@ export default {
      * @description: 描述主要功能 添加会议桌
      * @returns 描述函数的返回值
      * @date: 2020/6/13  16:11
-     * @author: zyy
      **/
     createConferenceTable() {
       const desktopTexture = this.textureLoader.load(
@@ -522,6 +392,7 @@ export default {
         leaf.rotation.x = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.y = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.z = -Math.PI / (i + 1) + Math.random()
+        leaf.name = '第一个花瓶'
         this.scene.add(leaf)
       }
       const latheMesh1 = new THREE.Mesh(latheGeometry, latheMaterial)
@@ -537,6 +408,7 @@ export default {
         leaf.rotation.x = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.y = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.z = -Math.PI / (i + 1) + Math.random()
+        leaf.name = '第二个花瓶'
         this.scene.add(leaf)
       }
       const latheMesh = new THREE.Mesh(latheGeometry, latheMaterial)
@@ -552,6 +424,7 @@ export default {
         leaf.rotation.x = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.y = -Math.PI / (i + 1) + Math.random()
         leaf.rotation.z = -Math.PI / (i + 1) + Math.random()
+        leaf.name = '第三个花瓶'
         this.scene.add(leaf)
       }
       const latheMesh3 = new THREE.Mesh(latheGeometry, latheMaterial)
@@ -563,7 +436,6 @@ export default {
      * @description: 描述主要功能 椅子
      * @returns 描述函数的返回值
      * @date: 2020/6/13  17:37
-     * @author: zyy
      **/
     createChair() {
       const groupBox = new THREE.Group()
@@ -634,7 +506,6 @@ export default {
      * @description: 描述主要功能 盆栽
      * @returns 描述函数的返回值
      * @date: 2020/6/13  20:44
-     * @author: zyy
      **/
     createPottedPlant() {
       const group = new THREE.Group()
@@ -699,7 +570,6 @@ export default {
      * @description: 描述主要功能 大屏展示
      * @returns 描述函数的返回值
      * @date: 2020/6/13  21:28
-     * @author: zyy
      **/
     createLargeScreen() {
       const createLargeTextures1 = this.textureLoader.load(
@@ -723,7 +593,6 @@ export default {
      * @description: 描述主要功能 加载字体
      * @returns 描述函数的返回值
      * @date: 2020/6/13  21:38
-     * @author: zyy
      **/
     createText() {
       this.fontload = new THREE.FontLoader()
@@ -748,7 +617,6 @@ export default {
      * @description: 描述主要功能 鼠标事件，包含补间动画
      * @returns 描述函数的返回值
      * @date: 2020/6/14  17:21
-     * @author: zyy
      **/
     onDocumentMouseDown(event) {
       let vector = new THREE.Vector3(
