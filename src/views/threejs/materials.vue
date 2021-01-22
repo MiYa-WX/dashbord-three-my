@@ -16,6 +16,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 
 // import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 
 export default {
   name: 'Materials',
@@ -23,7 +25,10 @@ export default {
     return {
       scene: null,
       camera: null,
-      renderer: null
+      renderer: null,
+      selectedObjects: [],
+      outlinePass: null,
+      composer: null
     }
   },
   mounted() {
@@ -31,6 +36,7 @@ export default {
   },
   destroyed() {
     window.removeEventListener('resize', this.onWindowResize)
+    this.renderer.domElement.removeEventListener('click', this.onClick, false)
   },
 
   methods: {
@@ -72,8 +78,13 @@ export default {
 
       // scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
 
-      //
-
+      this.composer = new EffectComposer(this.renderer)
+      this.outlinePass = new OutlinePass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        this.scene,
+        this.camera
+      )
+      this.composer.addPass(this.outlinePass)
       const manager = new THREE.LoadingManager()
 
       const loader = new ThreeMFLoader(manager)
@@ -85,7 +96,7 @@ export default {
         object.traverse((child) => {
           child.castShadow = true
         })
-
+        this.outlinePass.patternTexture = object
         this.scene.add(object)
       })
 
@@ -101,6 +112,7 @@ export default {
         new THREE.PlaneBufferGeometry(1000, 1000),
         new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
       )
+      ground.name = '后面的背景墙体'
       ground.rotation.x = -Math.PI / 2
       ground.position.y = 11
       ground.receiveShadow = true
@@ -125,6 +137,7 @@ export default {
       controls.enablePan = false
       controls.target.set(0, 20, 0)
       controls.update()
+      this.renderer.domElement.addEventListener('click', this.onClick, false)
 
       window.addEventListener('resize', this.onWindowResize, false)
 
@@ -135,11 +148,36 @@ export default {
       this.camera.updateProjectionMatrix()
 
       this.renderer.setSize(window.innerWidth, window.innerHeight)
+      this.composer.setSize(window.innerWidth, window.innerHeight)
 
       this.render()
     },
     render() {
       this.renderer.render(this.scene, this.camera)
+    },
+    onClick(event) {
+      if (event.isPrimary === false) {
+        return
+      }
+      const mouse = new THREE.Vector2()
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+      const raycaster = new THREE.Raycaster()
+      raycaster.setFromCamera(mouse, this.camera)
+
+      const intersects = raycaster.intersectObject(this.scene, true)
+
+      if (intersects.length > 0) {
+        const selectedObject = intersects[0].object
+
+        this.selectedObjects = []
+        this.selectedObjects.push(selectedObject)
+        // alert('您点击了', this.selectedObjects)
+        this.outlinePass.selectedObjects = this.selectedObjects
+      } else {
+        // outlinePass.selectedObjects = [];
+      }
     }
   }
 }
