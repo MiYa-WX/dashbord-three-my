@@ -1,5 +1,8 @@
 <template>
-  <div id="computerRoom"> </div>
+  <div class="container">
+    <div id="info"> </div>
+    <div id="computerRoom"> </div>
+  </div>
 </template>
 <script>
 import * as THREE from 'three'
@@ -38,19 +41,23 @@ export default {
     // 创建纹理加载器
     this.textureLoader = new THREE.TextureLoader()
 
-    // 创建地板
+    // 绘制地板
     this.createFloor()
-    // 创建墙壁
+    // 绘制墙壁
     this.createWall()
+    // 绘制墙壁
+    this.createCabinet()
 
     this.render()
 
     // 鼠标键盘控制
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 
+    window.addEventListener('click', this.onClick, false)
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
+    window.removeEventListener('click', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
   },
   methods: {
@@ -68,7 +75,7 @@ export default {
         100,
         this.windowWidth / this.windowHeight,
         0.1,
-        1000
+        10000
       )
       this.camera.name = 'mainCamera'
       // 设置摄像机位置
@@ -117,20 +124,7 @@ export default {
       requestAnimationFrame(this.render)
     },
     /**
-     * 窗口变化的自适应
-     */
-    onWindowResize() {
-      const width = window.innerWidth
-      const height = window.innerHeight
-      this.camera.aspect = width / height
-      // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
-      this.camera.updateProjectionMatrix()
-
-      // 重置渲染器输出画布canvas尺寸
-      this.renderer.setSize(width, height - 60)
-    },
-    /**
-     * 创建地板，并贴图
+     * 绘制地板，并贴图
      */
     createFloor() {
       // 创建材质并贴上纹理
@@ -144,20 +138,21 @@ export default {
             roughness: 0.7, // 材质的粗糙程度
             side: THREE.DoubleSide // 定义将要渲染哪一面：正面(THREE.BackSide)，背面(THREE.FrontSide)或两者(THREE.DoubleSide)
           })
-          // 设置阵列模式   默认ClampToEdgeWrapping  repeatWrapping：阵列  镜像阵列：MirroredRepeatWrapping
-          texture.wrapS = texture.wrapT = THREE.repeatWrapping
+          // 设置阵列模式   默认ClampToEdgeWrapping  RepeatWrapping：阵列  镜像阵列：MirroredRepeatWrapping
+          texture.wrapS = texture.wrapT = THREE.RepeatWrapping
           const repeatWidthNum = 4
           const repeatHeightNum = 7
 
           // uv两个方向纹理重复数量
           texture.repeat.set(repeatWidthNum, repeatHeightNum)
-          // 创建地板
+          // 绘制地板
           const boxGeo = new THREE.BoxBufferGeometry(
             texture.image.width * repeatWidthNum, // X轴上面的宽度
             4, // Y轴上面的高度
             texture.image.height * repeatHeightNum // Z轴上面的深度
           )
           const boxMesh = new THREE.Mesh(boxGeo, boxTextureMaterial)
+          boxMesh.name = '地板'
           boxMesh.position.set(0, 0, 0)
           this.scene.add(boxMesh)
         },
@@ -172,27 +167,144 @@ export default {
       )
     },
     /**
-     * 创建墙壁
+     * 绘制墙壁
      */
     createWall() {
-      const material = new THREE.MeshBasicMaterial({ color: 0xa8aaaf })
+      const material = new THREE.MeshBasicMaterial({ color: 0xafc0ca })
 
-      const geometryAfter = new THREE.BoxBufferGeometry(1, 200, 128 * 7)
-      const wallMeshAfter = new THREE.Mesh(geometryAfter, material)
+      const geometryAB = new THREE.BoxBufferGeometry(1, 200, 128 * 7)
+
+      const wallMeshBefore = new THREE.Mesh(geometryAB, material)
+      wallMeshBefore.position.set((128 * 4) / 2, 100, 0)
+      wallMeshBefore.name = '墙壁Before'
+      this.scene.add(wallMeshBefore)
+
+      const wallMeshAfter = new THREE.Mesh(geometryAB, material)
       wallMeshAfter.position.set(-(128 * 4) / 2, 100, 0)
+      wallMeshAfter.name = '墙壁After'
       this.scene.add(wallMeshAfter)
 
-      const geometryLeft = new THREE.BoxBufferGeometry(128 * 4, 200, 1)
-      const wallMeshLeft = new THREE.Mesh(geometryLeft, material)
+      const geometryLR = new THREE.BoxBufferGeometry(1, 200, 128 * 4)
+
+      const wallMeshLeft = new THREE.Mesh(geometryLR, material)
       wallMeshLeft.position.set(0, 100, (128 * 7) / 2)
+      wallMeshLeft.rotation.y += 1.5 * Math.PI
+      wallMeshLeft.name = '墙壁Left'
       this.scene.add(wallMeshLeft)
 
-      const geometryRight = new THREE.BoxBufferGeometry(128 * 4, 200, 1)
-      const wallMeshRight = new THREE.Mesh(geometryRight, material)
+      const wallMeshRight = new THREE.Mesh(geometryLR, material)
       wallMeshRight.position.set(0, 100, -(128 * 7) / 2)
+      wallMeshRight.rotation.y += 1.5 * Math.PI
+      wallMeshRight.name = '墙壁Right'
       this.scene.add(wallMeshRight)
+    },
+    /**
+     * 绘制机柜
+     */
+    createCabinet() {
+      const materialCabinet = new THREE.MeshPhongMaterial({ color: 0x42474c })
+
+      const geometryAB = new THREE.BoxBufferGeometry(60, 300, 30)
+      const wallMeshBefore = new THREE.Mesh(geometryAB, materialCabinet)
+      wallMeshBefore.name = '墙壁Before'
+      const wallMeshAfter = new THREE.Mesh(geometryAB, materialCabinet)
+      wallMeshAfter.name = '墙壁After'
+
+      const geometryLR = new THREE.BoxBufferGeometry(30, 300, 30)
+      const wallMeshLeft = new THREE.Mesh(geometryLR, materialCabinet)
+      wallMeshLeft.name = '墙壁Left'
+      const wallMeshRight = new THREE.Mesh(geometryLR, materialCabinet)
+      wallMeshRight.name = '墙壁Right'
+
+      const cabientGroup = new THREE.Group()
+      cabientGroup.add(wallMeshBefore)
+      cabientGroup.add(wallMeshAfter)
+      cabientGroup.add(wallMeshLeft)
+      cabientGroup.add(wallMeshRight)
+
+      cabientGroup.position.set(100, 0, 200)
+      cabientGroup.name = '机柜'
+      this.scene.add(cabientGroup)
+    },
+    /**
+     * 窗口变化的自适应
+     */
+    onWindowResize() {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      this.camera.aspect = width / height
+      // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
+      this.camera.updateProjectionMatrix()
+
+      // 重置渲染器输出画布canvas尺寸
+      this.renderer.setSize(width, height - 60)
+    },
+    /**
+     * 点击事件
+     */
+    onClick(event) {
+      // 获取 raycaster 和所有模型相交的数组，其中的元素按照距离排序，越近的越靠前
+      // var intersects = getIntersects(event)
+      event.preventDefault()
+      console.log('event.clientX:' + event.clientX)
+      console.log('event.clientY:' + event.clientY)
+      let x = 0
+      let y = 0
+      if (event.changedTouches) {
+        x = event.changedTouches[0].pageX
+        y = event.changedTouches[0].pageY
+      } else {
+        x = event.clientX
+        y = event.clientY
+      }
+      // 声明 raycaster 和 mouse 变量
+      const raycaster = new THREE.Raycaster()
+      const mouse = new THREE.Vector2()
+
+      // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
+      mouse.x = (x / (window.innerWidth + 210)) * 2 - 1
+      mouse.y = -(y / window.innerHeight) * 2 + 1
+
+      // 通过鼠标点击的位置(二维坐标)和当前相机的矩阵计算出射线位置
+      raycaster.setFromCamera(mouse, this.camera)
+
+      // 获取与射线相交的对象数组，其中的元素按照距离排序，越近的越靠前
+      const intersects = raycaster.intersectObjects(this.scene.children)
+
+      const infoDom = document.getElementById('info')
+      if (intersects.length === 0) {
+        infoDom.style.display = 'none' // 隐藏说明性标签
+        return
+      }
+      // 获取选中最近的 Mesh 对象
+      const selectObject = intersects[0].object
+      console.info('当前点击的物体', selectObject)
+
+      infoDom.style.display = 'block' // 显示说明性标签
+      // 修改标签的位置
+      infoDom.style.left = x + 'px'
+      infoDom.style.top = y + 'px'
+      infoDom.innerHTML = selectObject.name // 显示模型信息
+
+      if (selectObject.name.startsWith('机柜')) {
+        infoDom.innerHTML = selectObject.name + '详细信息' // 显示机柜详细信息
+        this.camera.fov = 50
+        this.camera.updateProjectionMatrix()
+      }
     }
   }
 }
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.container {
+  position: relative;
+}
+#info {
+  display: none;
+  position: absolute;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  line-height: 1;
+  border-radius: 5px;
+}
+</style>
