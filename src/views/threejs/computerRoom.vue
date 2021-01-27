@@ -11,6 +11,7 @@ import { WEBGL } from 'three/examples/jsm/WebGL.js'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
 export default {
   name: 'MeetingRoom',
   data() {
@@ -23,6 +24,8 @@ export default {
       renderer: null, // 渲染器对象
       textureLoader: null,
       controls: null, // 控制器
+      stats: null,
+
       // 定义机柜、服务器数据
       model: [
         {
@@ -30,16 +33,33 @@ export default {
             uuid: '1',
             id: 1,
             name: '1号机柜',
-            size: { w: 30, h: 100, d: 30 }, // 尺寸
-            position: { x: 0, y: 0, z: 50 }, // 位置
+            size: { w: 40, h: 100, d: 40 }, // 尺寸
+            position: { x: 50, y: 0, z: 0 }, // 位置
             servers: [
-              { uuid: '11', id: 11, name: '1号服务器', ip: '', apps: '' },
-              { uuid: '12', id: 12, name: '2号服务器', ip: '', apps: '' },
-              { uuid: '13', id: 13, name: '3号服务器', ip: '', apps: '' },
-              { uuid: '14', id: 14, name: '4号服务器', ip: '', apps: '' },
-              { uuid: '15', id: 15, name: '5号服务器', ip: '', apps: '' },
-              { uuid: '16', id: 16, name: '6号服务器', ip: '', apps: '' },
-              { uuid: '17', id: 17, name: '7号服务器', ip: '', apps: '' }
+              {
+                uuid: '11',
+                id: 11,
+                name: '1号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              },
+              {
+                uuid: '12',
+                id: 12,
+                name: '2号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              },
+              {
+                uuid: '13',
+                id: 13,
+                name: '3号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              }
             ]
           }
         },
@@ -48,9 +68,42 @@ export default {
             uuid: '2',
             id: 2,
             name: '2号机柜',
-            size: { w: 30, h: 100, d: 30 }, // 尺寸 宽、高、深
-            position: { x: 50, y: 0, z: -50 }, // 位置
-            servers: [{ uuid: '21', id: 21, name: '', ip: '', apps: '' }]
+            size: { w: 40, h: 100, d: 40 }, // 尺寸
+            position: { x: 100, y: 0, z: 0 }, // 位置
+            servers: [
+              {
+                uuid: '24',
+                id: 24,
+                name: '4号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              },
+              {
+                uuid: '25',
+                id: 25,
+                name: '5号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              },
+              {
+                uuid: '26',
+                id: 26,
+                name: '6号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: ''
+              },
+              {
+                uuid: '27',
+                id: 27,
+                name: '7号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: '/source/textures/computer/3.jpg'
+              }
+            ]
           }
         },
         {
@@ -58,9 +111,37 @@ export default {
             uuid: '3',
             id: 3,
             name: '3号机柜',
-            size: { w: 30, h: 100, d: 30 }, // 尺寸
-            position: { x: -50, y: 0, z: -50 }, // 位置
-            servers: [{ uuid: '31', id: 31, name: '', ip: '', apps: '' }]
+            size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
+            position: { x: -50, y: 0, z: 0 }, // 位置
+            servers: [
+              {
+                uuid: '31',
+                id: 31,
+                name: '8号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: '/source/textures/computer/3.jpg'
+              }
+            ]
+          }
+        },
+        {
+          cabinet: {
+            uuid: '4',
+            id: 4,
+            name: '4号机柜',
+            size: { w: 40, h: 100, d: 40 }, // 尺寸
+            position: { x: -100, y: 0, z: 0 }, // 位置
+            servers: [
+              {
+                uuid: '41',
+                id: 41,
+                name: '9号服务器',
+                ip: '',
+                apps: '',
+                skinImgurl: '/source/textures/computer/3.jpg'
+              }
+            ]
           }
         }
       ]
@@ -70,6 +151,8 @@ export default {
     this.roomDom = document.getElementById('computerRoom')
     this.areaWidth = window.innerWidth - 210
     this.areaHeight = window.innerHeight - 60
+
+    this.stats = this.initStats()
     this.createScene()
     this.createCamera()
     this.createRenderer()
@@ -106,17 +189,20 @@ export default {
     // 鼠标键盘控制
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     // 视角最小距离
-    this.controls.minDistance = 1
+    this.controls.minDistance = 10
     // 视角最远距离
-    this.controls.maxDistance = 1000
+    this.controls.maxDistance = 1600
     // 最大角度
-    this.controls.maxPolarAngle = Math.PI / 2.2
+    this.controls.maxPolarAngle = Math.PI / 1.6
+
     window.addEventListener('click', this.onClick, false)
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
     window.removeEventListener('click', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
+    document.body.removeChild(this.stats.domElement)
+    this.stats = null
   },
   methods: {
     /**
@@ -185,6 +271,7 @@ export default {
       this.renderer.render(this.scene, this.camera)
       // 实时渲染
       requestAnimationFrame(this.render)
+      this.stats.update()
     },
     /**
      * 绘制地板，并贴图
@@ -244,28 +331,28 @@ export default {
         side: THREE.DoubleSide
       })
 
-      const geometryAB = new THREE.BoxBufferGeometry(2, 200, 128 * 4)
+      const geometryAB = new THREE.BoxBufferGeometry(2, 100, 128 * 4)
 
       const wallMeshBefore = new THREE.Mesh(geometryAB, material)
-      wallMeshBefore.position.set((128 * 7) / 2, 100, 0)
+      wallMeshBefore.position.set((128 * 7) / 2, 50, 0)
       wallMeshBefore.name = '墙壁Before'
       this.scene.add(wallMeshBefore)
 
       const wallMeshAfter = new THREE.Mesh(geometryAB, material)
-      wallMeshAfter.position.set(-(128 * 7) / 2, 100, 0)
+      wallMeshAfter.position.set(-(128 * 7) / 2, 50, 0)
       wallMeshAfter.name = '墙壁After'
       this.scene.add(wallMeshAfter)
 
-      const geometryLR = new THREE.BoxBufferGeometry(2, 200, 128 * 7)
+      const geometryLR = new THREE.BoxBufferGeometry(2, 100, 128 * 7)
 
       const wallMeshLeft = new THREE.Mesh(geometryLR, material)
-      wallMeshLeft.position.set(0, 100, (128 * 4) / 2)
+      wallMeshLeft.position.set(0, 50, (128 * 4) / 2)
       wallMeshLeft.rotation.y += 1.5 * Math.PI
       wallMeshLeft.name = '墙壁Left'
       this.scene.add(wallMeshLeft)
 
       const wallMeshRight = new THREE.Mesh(geometryLR, material)
-      wallMeshRight.position.set(0, 100, -(128 * 4) / 2)
+      wallMeshRight.position.set(0, 50, -(128 * 4) / 2)
       wallMeshRight.rotation.y += 1.5 * Math.PI
       wallMeshRight.name = '墙壁Right'
       this.scene.add(wallMeshRight)
@@ -298,11 +385,11 @@ export default {
       const cabinet = {}
 
       // 机柜的后
-      const geometry = new THREE.BoxGeometry(w, h, 2)
+      const geometry = new THREE.BoxBufferGeometry(w, h, 2)
       const meterial = new THREE.MeshBasicMaterial({
         color: 0x777777,
-        // opacity: 0.2,
-        // transparent: true
+        opacity: 0.2,
+        transparent: true
       })
 
       const back = new THREE.Mesh(geometry, meterial)
@@ -315,7 +402,7 @@ export default {
       //   hoverCabinet(o.container)
       // }
       back.container = cabinet
-
+      back.name = 'back'
       this.scene.add(back)
 
       cabinet.back = back
@@ -334,11 +421,13 @@ export default {
       left.position.y = py + h / 2 + 1
       left.position.z = pz
       left.rotation.y = Math.PI / 2
+      left.name = 'left'
 
       right.position.x = px - w / 2 + 1
       right.position.y = py + h / 2 + 1
       right.position.z = pz
       right.rotation.y = -Math.PI / 2
+      right.name = 'right'
 
       // left.hover = function(o) {
       //   hoverCabinet(o.container)
@@ -358,10 +447,10 @@ export default {
       cabinet.right = right
 
       // 机柜的底部、顶部
-      const geometry2 = new THREE.BoxGeometry(w, 2, d)
+      const geometry2 = new THREE.BoxBufferGeometry(w, 2, d)
       const meterial2 = new THREE.MeshBasicMaterial({
         color: 0x222222,
-        // transparent: true
+        transparent: true
       })
 
       const top = new THREE.Mesh(geometry2, meterial2)
@@ -370,10 +459,12 @@ export default {
       top.position.x = px
       top.position.y = py + h + 2
       top.position.z = pz
+      top.name = 'top'
 
       bottom.position.x = px
       bottom.position.y = py + 2
       bottom.position.z = pz
+      bottom.name = 'bottom'
 
       // top.hover = function(o) {
       //   hoverCabinet(o.container)
@@ -393,7 +484,7 @@ export default {
       cabinet.bottom = bottom
 
       // 机柜门
-      const geometry3 = new THREE.BoxGeometry(w, h, 2)
+      const geometry3 = new THREE.BoxBufferGeometry(w, h, 1)
       const meterial3 = new THREE.MeshBasicMaterial({
         color: 0x003333,
         opacity: 0.5,
@@ -405,6 +496,7 @@ export default {
       front.position.x = px
       front.position.y = py + h / 2 + 1
       front.position.z = pz + d / 2
+      front.name = 'front'
       front.toggle = function(o) {
         if (o.rotation.y === 0) {
           o.rotation.y = o.rotation.y + (Math.PI * 3) / 5
@@ -438,24 +530,110 @@ export default {
       //
       cabinet.servers = []
 
-      // if (c && c.servers) {
-      //   cabinet.info = c
-      //   for (var i = 0; i < c.servers.length; i++) {
-      //     var server = createServer(
-      //       w - 4,
-      //       4,
-      //       d - 4,
-      //       px,
-      //       py + 9 * (i + 1),
-      //       pz + 2
-      //     ) // 服务器的厚度默认为 4， 服务器之间的间隔为 5
-      //     server.container = cabinet
-      //     server.info = c.servers[i]
-      //     cabinet.servers.push(server)
-      //   }
+      if (c && c.servers) {
+        cabinet.info = c
+        for (let i = 0; i < c.servers.length; i++) {
+          const server = this.createServer(
+            w - 4,
+            15,
+            d - 4,
+            px,
+            i === 0 ? 10 : py + 20 * (i + 1),
+            pz + 2,
+            c.servers[i]
+          ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
+          server.container = cabinet
+          server.info = c.servers[i]
+          cabinet.servers.push(server)
+        }
+      }
+      cabinet.name = 'cabinet'
+      return cabinet
+    },
+    createServer(w, h, d, px, py, pz, config) {
+      // 服务器
+      const texture = this.textureLoader.load(
+        config.skinImgurl
+          ? config.skinImgurl
+          : '/source/textures/computer/4.jpg'
+      )
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+      texture.repeat.set(1, 1)
+
+      const textureBack = this.textureLoader.load(
+        '/source/textures/computer/2.jpg'
+      )
+      textureBack.wrapS = textureBack.wrapT = THREE.RepeatWrapping
+      textureBack.repeat.set(1, 1)
+
+      const materialBasic = new THREE.MeshBasicMaterial({ color: 0xbbbbbb })
+      const geometry = new THREE.BoxBufferGeometry(w, h, d)
+      // Create an array of materials to be used in a cube, one for each side
+      const materialArray = []
+      // order to add materials: x+,x-,y+,y-,z+,z-
+      materialArray.push(materialBasic)
+      materialArray.push(materialBasic)
+      materialArray.push(materialBasic)
+      materialArray.push(materialBasic)
+      materialArray.push(new THREE.MeshBasicMaterial({ map: texture }))
+      materialArray.push(new THREE.MeshBasicMaterial({ map: textureBack }))
+      const material = new THREE.MeshFaceMaterial(materialArray)
+
+      const server = new THREE.Mesh(geometry, material)
+
+      server.position.x = px
+      server.position.y = py
+      server.position.z = pz
+      server.name = config.name
+      server.toggle = function(o, openOrClose) {
+        // 关闭同一机柜中的其他服务器
+        for (var i = 0; i < o.container.servers.length; i++) {
+          if (o === o.container.servers[i]) {
+            continue
+          }
+          if (o.container.servers[i].position.z === pz) {
+          } else {
+            o.container.servers[i].position.z =
+              o.container.servers[i].position.z - d / 2
+            //
+            // closeServer(o.container.servers[i])
+          }
+        }
+
+        if (o.position.z === pz) {
+          if (openOrClose == null || openOrClose) {
+            o.position.z = o.position.z + d / 2
+            // 打开服务器时，处理其他逻辑
+            // openServer(o)
+          }
+        } else {
+          if (openOrClose == null || !openOrClose) {
+            o.position.z = o.position.z - d / 2
+            // 关上服务器时，处理其他逻辑
+            // closeServer(o)
+          }
+        }
+      }
+      // server.hover = function(o) {
+      //   hoverServer(o)
       // }
 
-      return cabinet
+      this.scene.add(server)
+      // targetList.push(server)
+
+      return server
+    },
+
+    // 初始化性能插件
+    initStats() {
+      const statsTem = new Stats()
+      statsTem.domElement.style.position = 'absolute'
+      statsTem.domElement.style.left = 'auto'
+      statsTem.domElement.style.right = '110px'
+      statsTem.domElement.style.top = '0px'
+      document.body.appendChild(statsTem.domElement)
+
+      return statsTem
     },
     /**
      * 窗口变化的自适应
@@ -474,35 +652,38 @@ export default {
      * 点击事件
      */
     onClick(event) {
-      // event.preventDefault()
+      event.preventDefault()
+      this.camera.fov = 50
+
       console.log('event.clientX:' + event.clientX)
       console.log('event.clientY:' + event.clientY)
-      let x = 0
-      let y = 0
-      if (event.changedTouches) {
-        x = event.changedTouches[0].pageX
-        y = event.changedTouches[0].pageY
-      } else {
-        x = event.clientX
-        y = event.clientY
-      }
+      const x = event.clientX - 210
+      const y = event.clientY - 60
       // 声明 raycaster 和 mouse 变量
       // const raycaster = new THREE.Raycaster()
       const mouse = new THREE.Vector2()
-
       // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
-      mouse.x = (x / window.innerWidth - 210) * 2 - 1
-      mouse.y = -(y / window.innerHeight - 60) * 2 + 1
+      // mouse.x = (x / window.innerWidth) * 2 - 1
+      // mouse.y = -(y / window.innerHeight) * 2 + 1
+      mouse.x = (x / this.areaWidth) * 2 - 1
+      mouse.y = -(y / this.areaHeight) * 2 + 1
 
-      const stdVector = new THREE.Vector3(mouse.x, mouse.y, 0.5)
+      // const stdVector = new THREE.Vector3(mouse.x, mouse.y, 1)
+      // // 通过unproject方法，可以将标准设备坐标转世界坐标
+      // const worldVector = stdVector.unproject(this.camera)
 
-      // 通过unproject方法，可以将标准设备坐标转世界坐标
-      const worldVector = stdVector.unproject(this.camera)
+      // const raycaster = new THREE.Raycaster(
+      //   this.camera.position,
+      //   worldVector.sub(this.camera.position).normalize()
+      // )
 
+      const vector = new THREE.Vector3(mouse.x, mouse.y, 1)
+      vector.unproject(this.camera)
       const raycaster = new THREE.Raycaster(
         this.camera.position,
-        worldVector.sub(this.camera.position).normalize()
+        vector.sub(this.camera.position).normalize()
       )
+
       const intersects = raycaster.intersectObjects(this.scene.children)
 
       //       // 通过鼠标点击的位置(二维坐标)和当前相机的矩阵计算出射线位置
@@ -514,32 +695,45 @@ export default {
       const tooltipDom = document.getElementById('tooltip')
       if (intersects.length === 0) {
         tooltipDom.style.display = 'none' // 隐藏说明性标签
+        this.camera.fov = 50
+        this.camera.updateProjectionMatrix()
         return
       }
       // 获取选中最近的 Mesh 对象
       const selectObject = intersects[0].object
       console.info('当前点击的物体', selectObject)
 
+      if (selectObject.name.startsWith('地板')) {
+        tooltipDom.style.display = 'none' // 隐藏说明性标签
+        return
+      }
       tooltipDom.style.display = 'block' // 显示说明性标签
       // 修改标签的位置
-      tooltipDom.style.left = x + 'px'
-      tooltipDom.style.top = y + 'px'
+      tooltipDom.style.left = x + 50 + 'px'
+      tooltipDom.style.top = y - 30 + 'px'
       tooltipDom.innerHTML = selectObject.name // 显示模型信息
+      if (selectObject.name.includes('服务器')) {
+        tooltipDom.innerHTML += '<br/>' + '运行正常' // 显示机柜详细信息
+      }
 
-      if (selectObject.name.startsWith('机柜')) {
-        tooltipDom.innerHTML = selectObject.name + '详细信息' // 显示机柜详细信息
-      } else {
-        const a = -0.5 * Math.PI
-        const b = 0
-        const posSrc = { pos: b }
-        const tween = new TWEEN.Tween(posSrc).to({ pos: a }, 1000)
-        tween.easing(TWEEN.Easing.Elastic.InOut).onUpdate(() => {
-          // intersects[0].object.rotation.z = posSrc.pos
-          this.camera.fov = 35
-          this.camera.position.set(550, 750, 100)
-          this.camera.updateProjectionMatrix()
-        })
-        tween.start()
+      // if (selectObject.name.startsWith('机柜')) {
+      //   tooltipDom.innerHTML = selectObject.name + '详细信息' // 显示机柜详细信息
+      // } else {
+      //   const a = -0.5 * Math.PI
+      //   const b = 0
+      //   const posSrc = { pos: b }
+      //   const tween = new TWEEN.Tween(posSrc).to({ pos: a }, 1000)
+      //   tween.easing(TWEEN.Easing.Elastic.InOut).onUpdate(() => {
+      //     // intersects[0].object.rotation.z = posSrc.pos
+      //   })
+      this.camera.fov = 35
+      //   // this.camera.position.set(300, 1000, 800)
+
+      this.camera.updateProjectionMatrix()
+      //   tween.start()
+      // }
+      if (selectObject.toggle && typeof selectObject.toggle === 'function') {
+        selectObject.toggle(selectObject)
       }
     }
   }

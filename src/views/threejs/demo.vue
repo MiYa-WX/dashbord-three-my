@@ -47,12 +47,12 @@ export default {
         {
           position: { x: 0, y: 0, endX: 0, endY: 600 },
           door: {
-            isDoor: true,
+            isDoor: false,
             doorNum: 2,
             doorPoint: [{ x: 0, y: 200, endX: 0, endY: 400, doorDirection: 2 }]
           },
           windows: {
-            isWindows: true,
+            isWindows: false,
             windowsPoint: [
               { x: 0, y: 0, endX: 0, endY: 150 },
               { x: 0, y: 450, endX: 0, endY: 600 }
@@ -254,8 +254,8 @@ export default {
             roughness: 0.7, // 材质的粗糙程度
             side: THREE.DoubleSide // 定义将要渲染哪一面：正面(THREE.BackSide)，背面(THREE.FrontSide)或两者(THREE.DoubleSide)
           })
-          // 设置阵列模式   默认ClampToEdgeWrapping  repeatWrapping：阵列  镜像阵列：MirroredRepeatWrapping
-          texture.wrapS = texture.wrapT = THREE.repeatWrapping
+          // 设置阵列模式   默认ClampToEdgeWrapping  RepeatWrapping：阵列  镜像阵列：MirroredRepeatWrapping
+          texture.wrapS = texture.wrapT = THREE.RepeatWrapping
           const repeatWidthNum = 5
           const repeatHeightNum = 7
 
@@ -267,8 +267,8 @@ export default {
             4, // Y轴上面的高度
             600 // Z轴上面的深度
           )
-          boxGeo.name = '地板'
           const boxMesh = new THREE.Mesh(boxGeo, boxTextureMaterial)
+          boxMesh.name = '地板'
           boxMesh.position.set(0, 0, 0)
           this.scene.add(boxMesh)
         },
@@ -284,7 +284,6 @@ export default {
     },
     initLambert() {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1)
-      cubeGeometry.name = '墙壁'
 
       const material = new THREE.MeshBasicMaterial({ color: 0xa8aaaf })
       this.initLambertMod = new THREE.Mesh(cubeGeometry, material)
@@ -469,6 +468,8 @@ export default {
             100,
             z
           )
+          code.name = '墙壁'
+
           this.scene.add(code)
         }
       })

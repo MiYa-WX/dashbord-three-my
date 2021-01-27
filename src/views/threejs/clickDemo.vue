@@ -41,6 +41,8 @@ export default {
     removeEventListener('click', this.onMouseDblclick, false)
     removeEventListener('resize', this.onWindowResize, false)
     removeEventListener('keydown', this.onKeyDown, false)
+    document.body.removeChild(this.stats.domElement)
+    this.stats = null
   },
   methods: {
     initScene() {
