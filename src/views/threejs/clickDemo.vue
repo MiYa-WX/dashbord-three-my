@@ -42,7 +42,6 @@ export default {
     removeEventListener('resize', this.onWindowResize, false)
     removeEventListener('keydown', this.onKeyDown, false)
     document.body.removeChild(this.stats.domElement)
-    this.stats = null
   },
   methods: {
     initScene() {
@@ -125,8 +124,8 @@ export default {
 
       // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
       // 410 = 200(每一个几何体的间距)+ 210(左侧菜单宽度)
-      mouse.x = (event.clientX / (window.innerWidth + 410)) * 2 - 1
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+      mouse.x = ((event.clientX - 210) / window.innerWidth) * 2 - 1
+      mouse.y = -((event.clientY - 60) / window.innerHeight) * 2 + 1
 
       // 通过鼠标点击的位置(二维坐标)和当前相机的矩阵计算出射线位置
       raycaster.setFromCamera(mouse, this.camera)

@@ -202,7 +202,6 @@ export default {
     window.removeEventListener('click', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
     document.body.removeChild(this.stats.domElement)
-    this.stats = null
   },
   methods: {
     /**
@@ -272,6 +271,7 @@ export default {
       // 实时渲染
       requestAnimationFrame(this.render)
       this.stats.update()
+      TWEEN.update()
     },
     /**
      * 绘制地板，并贴图
@@ -466,17 +466,8 @@ export default {
       bottom.position.z = pz
       bottom.name = 'bottom'
 
-      // top.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       top.container = cabinet
-      // bottom.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       bottom.container = cabinet
-
-      // targetList.push(top)
-      // targetList.push(bottom)
       this.scene.add(top)
       this.scene.add(bottom)
 
@@ -497,37 +488,57 @@ export default {
       front.position.y = py + h / 2 + 1
       front.position.z = pz + d / 2
       front.name = 'front'
+      front.open = false
       front.toggle = function(o) {
-        if (o.rotation.y === 0) {
-          o.rotation.y = o.rotation.y + (Math.PI * 3) / 5
-          o.position.x = o.position.x + w / 2 + 3
-          o.position.z = o.position.z + d / 2
+        if (!front.open) {
+          const tweenRotation = new TWEEN.Tween(o.rotation).to(
+            {
+              y: o.rotation.y + (Math.PI * 3) / 5
+            },
+            5000
+          )
+          tweenRotation.easing(TWEEN.Easing.Elastic.Out).start()
 
-          // openCabinet(o.container)
+          const tweenPosition = new TWEEN.Tween(o.position).to(
+            {
+              x: o.position.x + w / 2 + 3,
+              z: o.position.z + d / 2
+            },
+            5000
+          )
+          tweenPosition.easing(TWEEN.Easing.Elastic.Out).start()
+
+          front.open = true
         } else {
-          o.rotation.y = o.rotation.y - (Math.PI * 3) / 5
-          o.position.x = o.position.x - w / 2 - 3
-          o.position.z = o.position.z - d / 2
+          const tweenRotation = new TWEEN.Tween(o.rotation).to(
+            {
+              y: o.rotation.y - (Math.PI * 3) / 5
+            },
+            5000
+          )
+          tweenRotation.easing(TWEEN.Easing.Elastic.Out).start()
+          const tweenPosition = new TWEEN.Tween(o.position).to(
+            {
+              x: o.position.x - w / 2 - 3,
+              z: o.position.z - d / 2
+            },
+            5000
+          )
+          tweenPosition.easing(TWEEN.Easing.Elastic.Out).start()
 
+          front.open = false
           // 关闭机柜门时，将机柜中的服务器收起
           for (var i = 0; i < o.container.servers.length; i++) {
             o.container.servers[i].toggle(o.container.servers[i], false)
           }
-
-          // closeCabinet(o.container)
         }
       }
-      // front.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       front.container = cabinet
 
       this.scene.add(front)
-      // targetList.push(front)
 
       cabinet.front = front
 
-      //
       cabinet.servers = []
 
       if (c && c.servers) {
@@ -591,12 +602,9 @@ export default {
           if (o === o.container.servers[i]) {
             continue
           }
-          if (o.container.servers[i].position.z === pz) {
-          } else {
+          if (o.container.servers[i].position.z !== pz) {
             o.container.servers[i].position.z =
               o.container.servers[i].position.z - d / 2
-            //
-            // closeServer(o.container.servers[i])
           }
         }
 
@@ -653,7 +661,6 @@ export default {
      */
     onClick(event) {
       event.preventDefault()
-      this.camera.fov = 50
 
       console.log('event.clientX:' + event.clientX)
       console.log('event.clientY:' + event.clientY)
@@ -703,18 +710,23 @@ export default {
       const selectObject = intersects[0].object
       console.info('当前点击的物体', selectObject)
 
-      if (selectObject.name.startsWith('地板')) {
+      if (!selectObject.name.includes('服务器')) {
         tooltipDom.style.display = 'none' // 隐藏说明性标签
-        return
+
+        // this.camera.fov = 50
+        // this.camera.updateProjectionMatrix()
+      } else {
+        tooltipDom.style.display = 'block' // 显示说明性标签
+        // 修改标签的位置
+        tooltipDom.style.left = x + 50 + 'px'
+        tooltipDom.style.top = y - 30 + 'px'
+        tooltipDom.innerHTML = selectObject.name + '<br/>' + '运行正常' // 显示详细信息
       }
-      tooltipDom.style.display = 'block' // 显示说明性标签
-      // 修改标签的位置
-      tooltipDom.style.left = x + 50 + 'px'
-      tooltipDom.style.top = y - 30 + 'px'
-      tooltipDom.innerHTML = selectObject.name // 显示模型信息
-      if (selectObject.name.includes('服务器')) {
-        tooltipDom.innerHTML += '<br/>' + '运行正常' // 显示机柜详细信息
+      if (selectObject.toggle && typeof selectObject.toggle === 'function') {
+        selectObject.toggle(selectObject)
       }
+      this.camera.fov = 35
+      this.camera.updateProjectionMatrix()
 
       // if (selectObject.name.startsWith('机柜')) {
       //   tooltipDom.innerHTML = selectObject.name + '详细信息' // 显示机柜详细信息
@@ -726,15 +738,10 @@ export default {
       //   tween.easing(TWEEN.Easing.Elastic.InOut).onUpdate(() => {
       //     // intersects[0].object.rotation.z = posSrc.pos
       //   })
-      this.camera.fov = 35
       //   // this.camera.position.set(300, 1000, 800)
 
-      this.camera.updateProjectionMatrix()
       //   tween.start()
       // }
-      if (selectObject.toggle && typeof selectObject.toggle === 'function') {
-        selectObject.toggle(selectObject)
-      }
     }
   }
 }
