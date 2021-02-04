@@ -8,6 +8,8 @@
 
 <script>
 import * as THREE from 'three'
+const ThreeBSP = require('three-js-csg')(THREE)
+
 // 引入轨道控制器组件，可以使得相机围绕目标进行轨道运动
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -63,6 +65,27 @@ export default {
       this.meshCone = new THREE.Mesh(coneGeometry, materialCone) // 网格模型对象Mesh
       this.meshCone.translateY(220)
       this.scene.add(this.meshCone) // 网格模型添加到场景中
+
+      /**
+       * 测试ThreeBSP: 简易铜钱形状几何体 ok
+       */
+      // 几何体对象
+      const cylinder = new THREE.CylinderGeometry(50, 50, 5, 40) // 圆柱
+      const box = new THREE.BoxGeometry(40, 5, 40) // 立方体
+      // 材质对象
+      const materialTem = new THREE.MeshPhongMaterial({ color: 0x0000ff })
+      // 网格模型对象
+      const cylinderMesh = new THREE.Mesh(cylinder, materialTem) // 圆柱
+      const boxMesh = new THREE.Mesh(box, materialTem) // 立方体
+      // 包装成ThreeBSP对象
+      const cylinderBSP = new ThreeBSP(cylinderMesh)
+      const boxBSP = new ThreeBSP(boxMesh)
+      const result = cylinderBSP.subtract(boxBSP)
+      // ThreeBSP对象转化为网格模型对象
+      const mesh = result.toMesh()
+      mesh.position.set(150, 300, 0)
+      this.scene.add(mesh) // 网格模型添加到场景中
+
       /**
        * 光源设置
        */

@@ -81,18 +81,30 @@ export const constantRoutes = [
         component: () => import('@/views/threejs/computerRoom'),
         meta: { title: 'computerRoom', icon: 'el-icon-data-board' }
       },
-      {
-        path: 'demo',
-        name: 'Demo',
-        component: () => import('@/views/threejs/demo'),
-        meta: { title: 'demo', icon: 'el-icon-data-board' }
-      },
-      {
-        path: 'clickDemo',
-        name: 'ClickDemo',
-        component: () => import('@/views/threejs/clickDemo'),
-        meta: { title: 'clickDemo', icon: 'el-icon-data-board' }
-      }
+      // {
+      //   path: 'demo',
+      //   name: 'Demo',
+      //   component: () => import('@/views/threejs/demo'),
+      //   meta: { title: 'demo', icon: 'el-icon-data-board' }
+      // },
+      // {
+      //   path: 'clickDemo',
+      //   name: 'ClickDemo',
+      //   component: () => import('@/views/threejs/clickDemo'),
+      //   meta: { title: 'clickDemo', icon: 'el-icon-data-board' }
+      // },
+      // {
+      //   path: 'door',
+      //   name: 'Door',
+      //   component: () => import('@/views/threejs/door'),
+      //   meta: { title: 'door', icon: 'el-icon-data-board' }
+      // },
+      // {
+      //   path: 'font',
+      //   name: 'Font',
+      //   component: () => import('@/views/threejs/font'),
+      //   meta: { title: 'font', icon: 'el-icon-data-board' }
+      // }
     ]
   },
 
