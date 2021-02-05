@@ -296,6 +296,19 @@ export default {
     window.removeEventListener('click', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
     document.body.removeChild(this.stats.domElement)
+    cancelAnimationFrame(this.renderer)
+    clearTimeout(this.clickFlag)
+
+    // this.clickFlag = null
+    // this.roomDom = null // canvas容器
+    // this.scene.dispose()
+    // this.scene = null // 场景对象
+    // this.camera = null // 相机对象
+    // this.renderer = null // 渲染器对象
+    // this.textureLoader = null
+    // this.controls = null // 控制器
+    // this.stats = null
+    // this.labelRenderer = null
   },
   methods: {
     /**
