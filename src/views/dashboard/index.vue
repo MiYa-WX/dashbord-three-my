@@ -12,7 +12,6 @@ const ThreeBSP = require('three-js-csg')(THREE)
 
 // 引入轨道控制器组件，可以使得相机围绕目标进行轨道运动
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-
 export default {
   name: 'Dashboard',
   data() {
@@ -65,6 +64,40 @@ export default {
       this.meshCone = new THREE.Mesh(coneGeometry, materialCone) // 网格模型对象Mesh
       this.meshCone.translateY(220)
       this.scene.add(this.meshCone) // 网格模型添加到场景中
+
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-10, 0, 10),
+        new THREE.Vector3(-5, 5, 5),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(5, -5, 5),
+        new THREE.Vector3(10, 0, 10)
+      ])
+
+      const points = curve.getPoints(50) // 将曲线划分成的段数
+      const geometryLine = new THREE.BufferGeometry().setFromPoints(points)
+
+      const materialLine = new THREE.LineBasicMaterial({ color: 0xff0000 })
+
+      // Create the final object to add to the scene
+      const curveObject = new THREE.Line(geometryLine, materialLine)
+      curveObject.position.set(-200, -50, 0)
+      this.scene.add(curveObject)
+
+      const curve1 = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-10, 0, 10),
+        new THREE.Vector3(-5, 0, 10),
+        new THREE.Vector3(0, 0, 10),
+        new THREE.Vector3(5, 0, 10),
+        new THREE.Vector3(10, 0, 10)
+      ])
+
+      const points1 = curve1.getPoints(50) // 将曲线划分成的段数
+      const geometryLine1 = new THREE.BufferGeometry().setFromPoints(points1)
+
+      // Create the final object to add to the scene
+      const curveObject1 = new THREE.Line(geometryLine1, materialLine)
+      curveObject1.position.set(-250, -150, 0)
+      this.scene.add(curveObject1)
 
       /**
        * 测试ThreeBSP: 简易铜钱形状几何体 ok
@@ -126,15 +159,14 @@ export default {
     animationRender() {
       // 执行渲染操作   指定场景、相机作为参数
       this.renderer.render(this.scene, this.camera)
-      this.mesh.rotateX(0.01)
-      this.mesh.rotateY(0.01)
+      // this.mesh.rotateX(0.01)
+      // this.mesh.rotateY(0.01)
       // /**
       //  * 注意写法this.animationRender()和this.animationRender
       //  * 有()是立即调用，会造成"Maximum call stack size exceeded"
       //  * 没有()是将这个方法交给 requestAnimationFrame 调用
       //  */
       // // requestAnimationFrame(this.animationRender())
-
       requestAnimationFrame(this.animationRender)
     },
     onWindowResize() {
