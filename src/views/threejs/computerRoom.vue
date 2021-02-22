@@ -1,7 +1,21 @@
 <template>
   <div class="container">
-    <div id="tooltip"> </div>
+    <!-- 操作菜单 -->
+    <div id="toolbar" class="toolbar">
+      <el-tooltip
+        v-for="(item, index) in btns"
+        :key="item.btnId + '_' + index"
+        class="btn-item"
+        :content="item.btnTitle"
+        effect="dark"
+        placement="bottom"
+      >
+        <i :class="item.btnIcon" @click="item.event"></i>
+      </el-tooltip>
+    </div>
     <div id="computerRoom"> </div>
+    <div id="tooltip"> </div>
+    <div id="stasWrap"> </div>
   </div>
 </template>
 <script>
@@ -15,222 +29,39 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
+import { objectModel, btns } from '@/utils/modelData'
+
 export default {
   name: 'MeetingRoom',
   data() {
     return {
-      roomDom: null, // canvas容器
       areaWidth: 0, // 窗口宽度
       areaHeight: 0, // 窗口高度
-      scene: null, // 场景对象
-      camera: null, // 相机对象
-      renderer: null, // 渲染器对象
-      textureLoader: null,
-      controls: null, // 控制器
-      stats: null,
-
-      // 定义机柜、服务器数据
-      model: [
-        {
-          cabinet: {
-            uuid: '1',
-            id: 1,
-            name: '1号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸
-            position: { x: 50, y: 0, z: 0 }, // 位置
-            servers: [
-              {
-                uuid: '11',
-                id: 11,
-                name: '1-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: ''
-              },
-              {
-                uuid: '12',
-                id: 12,
-                name: '1-2号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '',
-                deviceStatus: 1 // 0正常  1异常
-              },
-              {
-                uuid: '13',
-                id: 13,
-                name: '1-3号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: ''
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '2',
-            id: 2,
-            name: '2号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸
-            position: { x: 100, y: 0, z: 0 }, // 位置
-            servers: [
-              {
-                uuid: '21',
-                id: 21,
-                name: '2-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: ''
-              },
-              {
-                uuid: '22',
-                id: 21,
-                name: '2-2号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: ''
-              },
-              {
-                uuid: '23',
-                id: 23,
-                name: '2-3号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: ''
-              },
-              {
-                uuid: '24',
-                id: 24,
-                name: '2-4号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '3',
-            id: 3,
-            name: '3号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-            position: { x: -50, y: 0, z: 0 }, // 位置
-            servers: [
-              {
-                uuid: '31',
-                id: 31,
-                name: '3-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg',
-                deviceStatus: 1 // 0正常  1异常
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '4',
-            id: 4,
-            name: '4号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸
-            position: { x: -100, y: 0, z: 0 }, // 位置
-            servers: [
-              {
-                uuid: '41',
-                id: 41,
-                name: '4-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '5',
-            id: 5,
-            name: '5号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸
-            position: { x: -150, y: 0, z: 0 }, // 位置
-            servers: [
-              {
-                uuid: '51',
-                id: 51,
-                name: '5-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '6',
-            id: 6,
-            name: '6号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-            position: { x: -50, y: 0, z: -110 }, // 位置
-            servers: [
-              {
-                uuid: '61',
-                id: 61,
-                name: '6-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '7',
-            id: 7,
-            name: '7号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-            position: { x: -100, y: 0, z: -110 }, // 位置
-            servers: [
-              {
-                uuid: '71',
-                id: 71,
-                name: '7-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        },
-        {
-          cabinet: {
-            uuid: '8',
-            id: 8,
-            name: '8号机柜',
-            size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-            position: { x: -150, y: 0, z: -110 }, // 位置
-            servers: [
-              {
-                uuid: '81',
-                id: 81,
-                name: '8-1号服务器',
-                ip: '',
-                apps: '',
-                skinImgurl: '/source/textures/computer/3.jpg'
-              }
-            ]
-          }
-        }
-      ],
-      clickFlag: null,
-      labelRenderer: null
+      // roomDom: null, // canvas容器
+      // scene: null, // 场景对象
+      // camera: null, // 相机对象
+      // renderer: null, // 渲染器对象
+      // textureLoader: null,
+      // controls: null, // 控制器
+      // stats: null,
+      // clickFlag: null,
+      // labelRenderer: null,
+      btns
     }
   },
   mounted() {
+    // 这些全局变量不能放在data中初始化，会导致运行后的帧率过低，页面卡死
+    this.clickFlag = null
+    this.myReq = null
+    this.roomDom = null
+    this.scene = null
+    this.camera = null
+    this.renderer = null
+    this.textureLoader = null
+    this.controls = null
+    this.stats = null
+    this.labelRenderer = null
+
     this.roomDom = document.getElementById('computerRoom')
     this.areaWidth = window.innerWidth - 210
     this.areaHeight = window.innerHeight - 60
@@ -255,8 +86,8 @@ export default {
     // 绘制门
     this.createDoor()
     // 绘制机柜
-    for (let i = 0; i < this.model.length; i++) {
-      const c = this.model[i].cabinet
+    for (let i = 0; i < objectModel.length; i++) {
+      const c = objectModel[i].cabinet
       this.createCabinet(
         c.size.w,
         c.size.h,
@@ -268,7 +99,6 @@ export default {
       )
     }
     this.render()
-
     // 鼠标键盘控制
     this.controls = new OrbitControls(
       this.camera,
@@ -295,20 +125,17 @@ export default {
   destroyed() {
     window.removeEventListener('click', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
-    document.body.removeChild(this.stats.domElement)
-    cancelAnimationFrame(this.renderer)
+    cancelAnimationFrame(this.myReq)
     clearTimeout(this.clickFlag)
 
-    // this.clickFlag = null
-    // this.roomDom = null // canvas容器
-    // this.scene.dispose()
-    // this.scene = null // 场景对象
-    // this.camera = null // 相机对象
-    // this.renderer = null // 渲染器对象
-    // this.textureLoader = null
-    // this.controls = null // 控制器
-    // this.stats = null
-    // this.labelRenderer = null
+    this.roomDom = null // canvas容器
+    this.scene = null // 场景对象
+    this.camera = null // 相机对象
+    this.renderer = null // 渲染器对象
+    this.textureLoader = null
+    this.controls = null // 控制器
+    this.stats = null
+    this.labelRenderer = null
   },
   methods: {
     /**
@@ -384,7 +211,7 @@ export default {
 
       this.labelRenderer.render(this.scene, this.camera)
       // 实时渲染
-      requestAnimationFrame(this.render)
+      this.myReq = requestAnimationFrame(this.render)
       this.stats.update()
       TWEEN.update()
     },
@@ -949,8 +776,8 @@ export default {
       statsTem.domElement.style.left = 'auto'
       statsTem.domElement.style.right = '110px'
       statsTem.domElement.style.top = '0px'
-      document.body.appendChild(statsTem.domElement)
-
+      const stasWrapDom = document.getElementById('stasWrap')
+      stasWrapDom.appendChild(statsTem.domElement)
       return statsTem
     },
     /**
@@ -1057,6 +884,11 @@ export default {
 .container {
   position: relative;
 }
+#stasWrap {
+  position: absolute;
+  top: 10px;
+  left: 200px;
+}
 #tooltip {
   display: none;
   position: absolute;
@@ -1079,5 +911,19 @@ export default {
   height: 50px;
   line-height: 1;
   overflow: auto;
+}
+.toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #19304c;
+  color: #19ffff;
+  padding: 5px;
+  .btn-item {
+    margin: 0 5px;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+  }
 }
 </style>
