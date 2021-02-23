@@ -10,7 +10,7 @@
         effect="dark"
         placement="bottom"
       >
-        <i :class="item.btnIcon" @click="item.event"></i>
+        <i :class="item.btnIcon" @click.stop="item.event"></i>
       </el-tooltip>
     </div>
     <div id="computerRoom"> </div>
@@ -112,13 +112,13 @@ export default {
     this.controls.maxPolarAngle = Math.PI / 1.6
 
     window.addEventListener('click', this.onClick, false)
-    // window.addEventListener(
-    //   'dbclick',
-    //   () => {
-    //     clearTimeout(this.clickFlag)
-    //   },
-    //   false
-    // )
+    window.addEventListener(
+      'dbclick',
+      () => {
+        clearTimeout(this.clickFlag)
+      },
+      false
+    )
 
     window.addEventListener('resize', this.onWindowResize, false)
   },
@@ -806,23 +806,11 @@ export default {
         console.log('event.clientY:' + event.clientY)
         const x = event.clientX - 210
         const y = event.clientY - 60
-        // 声明 raycaster 和 mouse 变量
-        // const raycaster = new THREE.Raycaster()
+
         const mouse = new THREE.Vector2()
         // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
-        // mouse.x = (x / window.innerWidth) * 2 - 1
-        // mouse.y = -(y / window.innerHeight) * 2 + 1
         mouse.x = (x / this.areaWidth) * 2 - 1
         mouse.y = -(y / this.areaHeight) * 2 + 1
-
-        // const stdVector = new THREE.Vector3(mouse.x, mouse.y, 1)
-        // // 通过unproject方法，可以将标准设备坐标转世界坐标
-        // const worldVector = stdVector.unproject(this.camera)
-
-        // const raycaster = new THREE.Raycaster(
-        //   this.camera.position,
-        //   worldVector.sub(this.camera.position).normalize()
-        // )
 
         const vector = new THREE.Vector3(mouse.x, mouse.y, 1)
         vector.unproject(this.camera)
@@ -832,18 +820,9 @@ export default {
         )
 
         const intersects = raycaster.intersectObjects(this.scene.children)
-
-        //       // 通过鼠标点击的位置(二维坐标)和当前相机的矩阵计算出射线位置
-        // raycaster.setFromCamera(mouse, this.camera)
-
-        // // 获取与射线相交的对象数组，其中的元素按照距离排序，越近的越靠前
-        // const intersects = raycaster.intersectObjects(this.scene.children)
-
         const tooltipDom = document.getElementById('tooltip')
         if (intersects.length === 0) {
           tooltipDom.style.display = 'none' // 隐藏说明性标签
-          // this.camera.fov = 50
-          // this.camera.updateProjectionMatrix()
           return
         }
         // 获取选中最近的 Mesh 对象
@@ -852,9 +831,6 @@ export default {
 
         if (!selectObject.name.includes('服务器')) {
           tooltipDom.style.display = 'none' // 隐藏说明性标签
-
-          // this.camera.fov = 50
-          // this.camera.updateProjectionMatrix()
         } else {
           if (!selectObject.open) {
             tooltipDom.style.display = 'block' // 显示说明性标签
@@ -919,11 +895,11 @@ export default {
   background: #19304c;
   color: #19ffff;
   padding: 5px;
+  z-index: 10;
   .btn-item {
     margin: 0 5px;
     font-size: 18px;
     cursor: pointer;
-    z-index: 10;
   }
 }
 </style>
