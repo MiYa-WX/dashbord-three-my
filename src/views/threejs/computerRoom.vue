@@ -10,11 +10,17 @@
         effect="dark"
         placement="bottom"
       >
-        <i :class="item.btnIcon" @click.stop="item.event"></i>
+        <i
+          :class="item.btnIcon"
+          @click.stop="menuEvent($event, item.btnId)"
+        ></i>
       </el-tooltip>
     </div>
+    <!-- 三维场景容器 -->
     <div id="computerRoom"> </div>
+    <!-- 服务器详情容器 -->
     <div id="tooltip"> </div>
+    <!-- 渲染性能性能监控器 -->
     <div id="stasWrap"> </div>
   </div>
 </template>
@@ -27,6 +33,7 @@ import {
   CSS2DObject
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { objectModel, btns } from '@/utils/modelData'
@@ -44,9 +51,11 @@ export default {
       // textureLoader: null,
       // controls: null, // 控制器
       // stats: null,
-      // clickFlag: null,
       // labelRenderer: null,
-      btns
+      // clickFlag: null,
+      // myReq: null,
+      btns,
+      firstPerson: false
     }
   },
   mounted() {
@@ -98,18 +107,38 @@ export default {
         c
       )
     }
+    if (this.firstPerson) {
+      this.clock = new THREE.Clock()
+
+      this.controls = new FirstPersonControls(
+        this.camera
+        // 不能加这个，否则场景不会移动，也不知道为什么
+        // this.renderer.domElement
+      )
+
+      this.controls.enabled = true
+      this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
+      this.controls.movementSpeed = 100 // 相机移动速度
+      this.controls.noFly = false
+      this.controls.constrainVertical = false // 约束垂直
+      this.controls.verticalMin = 1.0
+      this.controls.verticalMax = 2.0
+      this.controls.lon = 22 // 进入初始视角x轴的角度
+      this.controls.lat = 40 // 初始视角进入后y轴的角度
+    } else {
+      // 鼠标键盘控制
+      this.controls = new OrbitControls(
+        this.camera,
+        this.labelRenderer.domElement
+      )
+      // 视角最小距离
+      this.controls.minDistance = 10
+      // 视角最远距离
+      this.controls.maxDistance = 1600
+      // 最大角度
+      this.controls.maxPolarAngle = Math.PI / 1.6
+    }
     this.render()
-    // 鼠标键盘控制
-    this.controls = new OrbitControls(
-      this.camera,
-      this.labelRenderer.domElement
-    )
-    // 视角最小距离
-    this.controls.minDistance = 10
-    // 视角最远距离
-    this.controls.maxDistance = 1600
-    // 最大角度
-    this.controls.maxPolarAngle = Math.PI / 1.6
 
     window.addEventListener('click', this.onClick, false)
     window.addEventListener(
@@ -131,13 +160,103 @@ export default {
     this.roomDom = null // canvas容器
     this.scene = null // 场景对象
     this.camera = null // 相机对象
-    this.renderer = null // 渲染器对象
+    // this.renderer = null //  渲染器对象
     this.textureLoader = null
-    this.controls = null // 控制器
+    // this.controls = null // 控制器
+
+    if (this.controls) {
+      this.controls.dispose()
+    }
     this.stats = null
     this.labelRenderer = null
   },
   methods: {
+    menuEvent(e, btnId) {
+      switch (btnId) {
+        case 'btnReset':
+          this.handleReset()
+          break
+        case 'btnFirstPerson':
+          this.handleFirstPerson()
+          break
+
+        default:
+          break
+      }
+    },
+    handleReset() {
+      const tweenRotation = new TWEEN.Tween(this.camera.position).to(
+        {
+          x: 0,
+          y: 500,
+          z: 500
+        },
+        1000
+      )
+      tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+      this.controls.reset()
+      this.controls.update()
+    },
+    handleFirstPerson() {
+      this.firstPerson = !this.firstPerson
+      if (this.firstPerson) {
+        if (this.controls) {
+          this.controls.dispose()
+        }
+        this.clock = null
+        this.controls = null
+
+        this.controls = new FirstPersonControls(
+          this.camera
+          // 不能加这个，否则场景不会移动，也不知道为什么
+          // this.renderer.domElement
+        )
+
+        this.controls.enabled = true
+        this.controls.lookVertical = false // 是否可以垂直环顾四周
+        this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
+        this.controls.movementSpeed = 100 // 相机移动速度
+        this.controls.noFly = false
+        this.controls.constrainVertical = false // 约束垂直
+        this.controls.verticalMin = 1.0
+        this.controls.verticalMax = 2.0
+        this.controls.lon = 0 // 进入初始视角x轴的角度
+        this.controls.lat = 0 // 初始视角进入后y轴的角度
+        this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
+        this.clock = new THREE.Clock()
+        // this.controls.update(this.clock.getDelta())
+        // this.render()
+
+        // const tweenRotation = new TWEEN.Tween(this.camera.position).to(
+        //   {
+        //     x: 0,
+        //     y: 200,
+        //     z: (128 * 3) / 2
+        //   },
+        //   1000
+        // )
+
+        // tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+      } else {
+        if (this.controls) {
+          this.controls.dispose()
+        }
+        this.clock = null
+        this.controls = null
+        // 鼠标键盘控制
+        this.controls = new OrbitControls(
+          this.camera,
+          this.labelRenderer.domElement
+        )
+        // 视角最小距离
+        this.controls.minDistance = 10
+        // 视角最远距离
+        this.controls.maxDistance = 1600
+        // 最大角度
+        this.controls.maxPolarAngle = Math.PI / 1.6
+      }
+      console.info('第一人称巡检', this.controls)
+    },
     /**
      * 创建场景,并设置场景的相关参数
      */
@@ -149,14 +268,14 @@ export default {
      */
     createCamera() {
       this.camera = new THREE.PerspectiveCamera(
-        50,
+        45,
         this.areaWidth / this.areaHeight,
-        0.1,
-        2000
+        1,
+        100000
       )
       this.camera.name = 'mainCamera'
       // 设置摄像机位置
-      this.camera.position.set(300, 1000, 800)
+      this.camera.position.set(0, 500, 500)
       // 指向场景中心
       this.camera.lookAt(this.scene.position)
     },
@@ -167,16 +286,18 @@ export default {
       // WebGL兼容性检查 WEBGL.isWebGLAvailable()
       if (WEBGL.isWebGLAvailable()) {
         this.renderer = new THREE.WebGLRenderer({
+          logarithmicDepthBuffer: true, // 是否使用对数深度缓存
           alpha: true,
           antialias: true // antialias:是否执行抗锯齿
         })
         // 设置颜色和透明度
         this.renderer.setClearColor(0x1f2d3d, 1)
-
+        this.renderer.shadowMap.enabled = true //
+        this.renderer.shadowMapSoft = true
         // 设置渲染器大小
         this.renderer.setSize(this.areaWidth, this.areaHeight)
         // 兼容高清屏幕
-        this.renderer.setPixelRatio(window.devicePixelRatio)
+        // this.renderer.setPixelRatio(window.devicePixelRatio)
         // 将渲染器的DOM元素(this.renderer.domElement)添加到roomDom元素中
         this.roomDom.appendChild(this.renderer.domElement)
       } else {
@@ -207,6 +328,10 @@ export default {
      * 用相机(camera)渲染一个场景(scene)
      */
     render() {
+      if (this.firstPerson) {
+        this.controls.update(this.clock.getDelta())
+      }
+
       this.renderer.render(this.scene, this.camera)
 
       this.labelRenderer.render(this.scene, this.camera)
@@ -263,7 +388,6 @@ export default {
      */
     createWall() {
       const wallTexture = this.textureLoader.load(
-        // 'data:image/jpeg;base64,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'
         '/source/textures/wall/wall.jpg'
       )
       wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping
@@ -327,7 +451,7 @@ export default {
         door.rotation.y += 1.5 * Math.PI
         door.name = '房门'
         door.open = false
-        door.toggle = function(o) {
+        door.toggle = (o) => {
           if (!door.open) {
             const tweenRotation = new TWEEN.Tween(o.rotation).to(
               {
@@ -411,9 +535,6 @@ export default {
       back.position.y = py + h / 2 + 1
       back.position.z = pz - d / 2 + 2
 
-      // back.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       back.container = cabinet
       back.name = 'back'
       this.scene.add(back)
@@ -442,17 +563,9 @@ export default {
       right.rotation.y = -Math.PI / 2
       right.name = 'right'
 
-      // left.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       left.container = cabinet
-      // right.hover = function(o) {
-      //   hoverCabinet(o.container)
-      // }
       right.container = cabinet
 
-      // targetList.push(left)
-      // targetList.push(right)
       this.scene.add(left)
       this.scene.add(right)
 
@@ -515,7 +628,7 @@ export default {
       front.position.z = pz + d / 2
       front.name = 'front'
       front.open = false
-      front.toggle = function(o) {
+      front.toggle = (o) => {
         if (!front.open) {
           const tweenRotation = new TWEEN.Tween(o.rotation).to(
             {
@@ -635,7 +748,7 @@ export default {
       server.position.z = pz
       server.name = config.name
       server.open = false
-      server.toggle = function(o, openOrClose) {
+      server.toggle = (o, openOrClose) => {
         // 关闭同一机柜中的其他服务器
         for (var i = 0; i < o.container.servers.length; i++) {
           const serversItem = o.container.servers[i]
@@ -789,7 +902,7 @@ export default {
       this.camera.aspect = width / height
       // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
       this.camera.updateProjectionMatrix()
-
+      // this.controls.handleResize()
       // 重置渲染器输出画布canvas尺寸
       this.renderer.setSize(width, height - 60)
       this.labelRenderer.setSize(width, height - 60)
@@ -849,8 +962,8 @@ export default {
         if (selectObject.toggle && typeof selectObject.toggle === 'function') {
           selectObject.toggle(selectObject)
         }
-        this.camera.fov = 35
-        this.camera.updateProjectionMatrix()
+        // this.camera.fov = 35
+        // this.camera.updateProjectionMatrix()
       }, 250)
     }
   }

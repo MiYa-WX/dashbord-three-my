@@ -104,7 +104,13 @@ export const constantRoutes = [
       //   name: 'Font',
       //   component: () => import('@/views/threejs/font'),
       //   meta: { title: 'font', icon: 'el-icon-data-board' }
-      // }
+      // },
+      {
+        path: 'FirstPersonControls',
+        name: 'FirstPersonControls',
+        component: () => import('@/views/threejs/FirstPersonControls'),
+        meta: { title: 'FirstPersonControls', icon: 'el-icon-data-board' }
+      }
     ]
   },
 

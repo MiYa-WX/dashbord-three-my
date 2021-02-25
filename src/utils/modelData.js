@@ -202,24 +202,6 @@ export const btns = [
     btnId: 'btnReset',
     btnTitle: '场景复位',
     btnIcon: 'el-icon-refresh-left',
-    event: function() {}
-  },
-  {
-    btnId: 'btnAlarm',
-    btnTitle: '告警',
-    btnIcon: 'el-icon-warning',
-    event: function() {}
-  },
-  {
-    btnId: 'btnUsage',
-    btnTitle: '烟雾模拟',
-    btnIcon: 'el-icon-smoking',
-    event: function() {}
-  },
-  {
-    btnId: 'btnAlarm',
-    btnTitle: '巡检',
-    btnIcon: 'el-icon-map-location',
     event: function() {
       // var mainCamera = msj3DObj.commonFunc.findObject('mainCamera') //主摄像机
       // var doorRight = msj3DObj.commonFunc.findObject('doorRight')
@@ -259,6 +241,27 @@ export const btns = [
       //     )
       //   })
     }
+  },
+  {
+    btnId: 'btnFirstPerson',
+    btnTitle: '第一人称巡检',
+    btnIcon: 'el-icon-map-location',
+    event: () => {
+      debugger
+      console.info('第一人称巡检', this)
+    }
+  },
+  {
+    btnId: 'btnAlarm',
+    btnTitle: '告警',
+    btnIcon: 'el-icon-warning',
+    event: function() {}
+  },
+  {
+    btnId: 'btnUsage',
+    btnTitle: '烟雾模拟',
+    btnIcon: 'el-icon-smoking',
+    event: function() {}
   },
   {
     btnId: 'btnConnection',
