@@ -1,27 +1,30 @@
 <template>
   <div class="container">
-    <!-- 操作菜单 -->
-    <div id="toolbar" class="toolbar">
-      <el-tooltip
-        v-for="(item, index) in btns"
-        :key="item.btnId + '_' + index"
-        class="btn-item"
-        :content="item.btnTitle"
-        effect="dark"
-        placement="bottom"
-      >
-        <i
-          :class="item.btnIcon"
-          @click.stop="menuEvent($event, item.btnId)"
-        ></i>
-      </el-tooltip>
+    <div v-if="suportWebGL">
+      <!-- 操作菜单 -->
+      <div id="toolbar" class="toolbar">
+        <el-tooltip
+          v-for="(item, index) in btnsConfig"
+          :key="item.btnId + '_' + index"
+          class="btn-item"
+          :content="item.btnTitle"
+          effect="dark"
+          placement="bottom"
+        >
+          <i
+            :class="item.btnIcon"
+            @click.stop="menuEvent($event, item.btnId)"
+          ></i>
+        </el-tooltip>
+      </div>
+      <!-- 三维场景容器 -->
+      <div id="computerRoom"> </div>
+      <!-- 服务器详情容器 -->
+      <div id="tooltip"> </div>
+      <!-- 渲染性能性能监控器 -->
+      <div id="stasWrap"> </div>
     </div>
-    <!-- 三维场景容器 -->
-    <div id="computerRoom"> </div>
-    <!-- 服务器详情容器 -->
-    <div id="tooltip"> </div>
-    <!-- 渲染性能性能监控器 -->
-    <div id="stasWrap"> </div>
+    <div v-else ref="notSuport"> </div>
   </div>
 </template>
 <script>
@@ -36,68 +39,67 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
-import { objectModel, btns } from '@/utils/modelData'
+import { objectModel, btnsConfig } from '@/utils/modelData'
+import {
+  createBox,
+  createCylinder,
+  createPlane,
+  createEmptyBox,
+  createFloor,
+  createWall,
+  createDoor,
+  createCabinet
+} from '@/utils/createModelObject'
 
 export default {
   name: 'MeetingRoom',
   data() {
     return {
+      btnsConfig, // 操作按钮配置项
       areaWidth: 0, // 窗口宽度
       areaHeight: 0, // 窗口高度
-      // roomDom: null, // canvas容器
-      // scene: null, // 场景对象
-      // camera: null, // 相机对象
-      // renderer: null, // 渲染器对象
-      // textureLoader: null,
-      // controls: null, // 控制器
-      // stats: null,
-      // labelRenderer: null,
-      // clickFlag: null,
-      // myReq: null,
-      btns,
-      firstPerson: false
+      isFirstPerson: false, // 是否开启第一人称漫游
+      isStats: true // 是否开启性能检测控件
+    }
+  },
+  computed: {
+    suportWebGL() {
+      // WebGL兼容性检查 WEBGL.isWebGLAvailable()
+      return WEBGL.isWebGLAvailable()
     }
   },
   mounted() {
-    // 这些全局变量不能放在data中初始化，会导致运行后的帧率过低，页面卡死
-    this.clickFlag = null
-    this.myReq = null
-    this.roomDom = null
-    this.scene = null
-    this.camera = null
-    this.renderer = null
-    this.textureLoader = null
-    this.controls = null
-    this.stats = null
-    this.labelRenderer = null
+    // WebGL兼容性检查
+    if (!this.suportWebGL) {
+      const warning = WEBGL.getWebGLErrorMessage()
+      this.$refs.notSuport.appendChild(warning)
+      return
+    }
 
-    this.roomDom = document.getElementById('computerRoom')
-    this.areaWidth = window.innerWidth - 210
-    this.areaHeight = window.innerHeight - 60
-
-    this.stats = this.initStats()
-    this.createScene()
-    this.createCamera()
+    /**
+     * 初始化三维场景的中全局变量
+     * 这些全局变量不能放在data中初始化，会导致运行后的帧率过低，页面卡死
+     */
+    this.initVariables()
     this.createRenderer()
-    this.initLight()
+    this.createCamera()
+    this.createScene()
+    this.createLight()
 
-    // 添加坐标轴，辅助判断位置
-    const axes = new THREE.AxesHelper(1000)
-    this.scene.add(axes)
-
-    // 创建纹理加载器
-    this.textureLoader = new THREE.TextureLoader()
+    // 一些辅助对象
+    this.createHelperObject(true, false)
 
     // 绘制地板
-    this.createFloor()
+    createFloor(this)
     // 绘制墙壁
-    this.createWall()
+    createWall(this)
     // 绘制门
-    this.createDoor()
+    createDoor(this)
     // 绘制机柜
     for (let i = 0; i < objectModel.length; i++) {
       const c = objectModel[i].cabinet
-      this.createCabinet(
+      createCabinet(
+        this,
         c.size.w,
         c.size.h,
         c.size.d,
@@ -107,158 +109,90 @@ export default {
         c
       )
     }
-    if (this.firstPerson) {
-      this.clock = new THREE.Clock()
 
-      this.controls = new FirstPersonControls(
-        this.camera
-        // 不能加这个，否则场景不会移动，也不知道为什么
-        // this.renderer.domElement
-      )
-
-      this.controls.enabled = true
-      this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
-      this.controls.movementSpeed = 100 // 相机移动速度
-      this.controls.noFly = false
-      this.controls.constrainVertical = false // 约束垂直
-      this.controls.verticalMin = 1.0
-      this.controls.verticalMax = 2.0
-      this.controls.lon = 22 // 进入初始视角x轴的角度
-      this.controls.lat = 40 // 初始视角进入后y轴的角度
+    // // 添加3D模型
+    // for (let i = 0; i < objectModel.length; i++) {
+    //   const object = objectModel[i]
+    //   this.init3DModel(object)
+    // }
+    if (this.isFirstPerson) {
+      this.initFirstPersonControls()
     } else {
-      // 鼠标键盘控制
-      this.controls = new OrbitControls(
-        this.camera,
-        this.labelRenderer.domElement
-      )
-      // 视角最小距离
-      this.controls.minDistance = 10
-      // 视角最远距离
-      this.controls.maxDistance = 1600
-      // 最大角度
-      this.controls.maxPolarAngle = Math.PI / 1.6
+      this.initOrbitControls()
     }
     this.render()
-
-    window.addEventListener('click', this.onClick, false)
-    window.addEventListener(
-      'dbclick',
-      () => {
-        clearTimeout(this.clickFlag)
-      },
-      false
-    )
 
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
-    window.removeEventListener('click', this.onClick, false)
+    this.roomDom.removeEventListener('click', this.onClick, false)
+    this.roomDom.removeEventListener('dbclick', this.onClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
-    cancelAnimationFrame(this.myReq)
+    cancelAnimationFrame(this.myReqAnima)
     clearTimeout(this.clickFlag)
 
     this.roomDom = null // canvas容器
     this.scene = null // 场景对象
     this.camera = null // 相机对象
-    // this.renderer = null //  渲染器对象
-    this.textureLoader = null
-    // this.controls = null // 控制器
 
-    if (this.controls) {
-      this.controls.dispose()
-    }
+    this.resetControls()
     this.stats = null
     this.labelRenderer = null
   },
   methods: {
-    menuEvent(e, btnId) {
-      switch (btnId) {
-        case 'btnReset':
-          this.handleReset()
-          break
-        case 'btnFirstPerson':
-          this.handleFirstPerson()
-          break
-
-        default:
-          break
-      }
-    },
-    handleReset() {
-      new TWEEN.Tween(this.camera.position).to(
-        {
-          x: 0,
-          y: 500,
-          z: 500
-        },
-        1000
-      ).easing(TWEEN.Easing.Quadratic.InOut).start()
-      this.controls.reset()
-      this.controls.update()
-    },
-    handleFirstPerson() {
-      this.firstPerson = !this.firstPerson
-      if (this.firstPerson) {
-        if (this.controls) {
-          this.controls.dispose()
-        }
-        this.clock = null
-        this.controls = null
-
-        this.controls = new FirstPersonControls(
-          this.camera
-          // 不能加这个，否则场景不会移动，也不知道为什么
-          // this.renderer.domElement
-        )
-
-        this.controls.enabled = true
-        this.controls.lookVertical = false // 是否可以垂直环顾四周
-        this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
-        this.controls.movementSpeed = 100 // 相机移动速度
-        this.controls.noFly = false
-        this.controls.constrainVertical = false // 约束垂直
-        this.controls.verticalMin = 1.0
-        this.controls.verticalMax = 2.0
-        this.controls.lon = 0 // 进入初始视角x轴的角度
-        this.controls.lat = 0 // 初始视角进入后y轴的角度
-        this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
-        this.clock = new THREE.Clock()
-        // this.controls.update(this.clock.getDelta())
-        // this.render()
-
-        // new TWEEN.Tween(this.camera.position).to(
-        //   {
-        //     x: 0,
-        //     y: 200,
-        //     z: (128 * 3) / 2
-        //   },
-        //   1000
-        // ).easing(TWEEN.Easing.Quadratic.InOut).start()
-      } else {
-        if (this.controls) {
-          this.controls.dispose()
-        }
-        this.clock = null
-        this.controls = null
-        // 鼠标键盘控制
-        this.controls = new OrbitControls(
-          this.camera,
-          this.labelRenderer.domElement
-        )
-        // 视角最小距离
-        this.controls.minDistance = 10
-        // 视角最远距离
-        this.controls.maxDistance = 1600
-        // 最大角度
-        this.controls.maxPolarAngle = Math.PI / 1.6
-      }
-      console.info('第一人称巡检', this.controls)
+    /**
+     * 初始化三维场景的中全局变量
+     */
+    initVariables() {
+      this.clickFlag = null // 鼠标单击
+      this.myReqAnima = null // requestAnimationFrame() 开始去执行回调函数的时刻
+      this.roomDom = null // 三维场景放置canvas的dom容器
+      this.scene = null // 场景
+      this.camera = null // 相机
+      this.renderer = null // 渲染器
+      this.controls = null // 鼠标控制器
+      this.stats = null // 性能监控
+      this.labelRenderer = null // CSS 3D渲染器
+      this.areaWidth = window.innerWidth - 210
+      this.areaHeight = window.innerHeight - 60
+      this.roomDom = document.getElementById('computerRoom')
+      this.stats = this.isStats ? this.initStats() : null
     },
     /**
-     * 创建场景,并设置场景的相关参数
+     * 创建渲染器,并设置渲染器的相关参数
      */
-    createScene() {
-      this.scene = new THREE.Scene()
+    createRenderer() {
+      this.renderer = new THREE.WebGLRenderer({
+        logarithmicDepthBuffer: true, // 是否使用对数深度缓存
+        alpha: true,
+        antialias: true // antialias:是否执行抗锯齿
+      })
+      // 设置渲染器大小
+      this.renderer.setSize(this.areaWidth, this.areaHeight)
+      // 兼容高清屏幕
+      // this.renderer.setPixelRatio(window.devicePixelRatio)
+      // 将渲染器的DOM元素(this.renderer.domElement)添加到roomDom元素中
+      this.roomDom.appendChild(this.renderer.domElement)
+      // 设置颜色和透明度
+      this.renderer.setClearColor(0x1f2d3d, 1)
+      this.renderer.shadowMap.enabled = true //
+      this.renderer.shadowMapSoft = true
+
+      this.labelRenderer = new CSS2DRenderer()
+      this.labelRenderer.setSize(this.areaWidth, this.areaHeight)
+      this.labelRenderer.domElement.style.position = 'absolute'
+      this.labelRenderer.domElement.style.top = '0px'
+      this.roomDom.appendChild(this.labelRenderer.domElement)
+
+      // 绑定事件
+      this.roomDom.addEventListener('click', this.onClick, false)
+      this.roomDom.addEventListener(
+        'dbclick',
+        () => {
+          clearTimeout(this.clickFlag)
+        },
+        false
+      )
     },
     /**
      * 创建相机,并设置相机的相关参数
@@ -271,600 +205,190 @@ export default {
         100000
       )
       this.camera.name = 'mainCamera'
-      // 设置摄像机位置
-      this.camera.position.set(0, 500, 500)
-      // 指向场景中心
-      this.camera.lookAt(this.scene.position)
+      // // 设置摄像机位置
+      // this.camera.position.set(0, 500, -500)
+      this.camera.position.set(0, 1000, -1800)
+      // 相机指向中心位置
+      this.camera.lookAt({ x: 0, y: 0, z: 0 })
     },
     /**
-     * 创建渲染器,并设置渲染器的相关参数
+     * 创建场景,并设置场景的相关参数
      */
-    createRenderer() {
-      // WebGL兼容性检查 WEBGL.isWebGLAvailable()
-      if (WEBGL.isWebGLAvailable()) {
-        this.renderer = new THREE.WebGLRenderer({
-          logarithmicDepthBuffer: true, // 是否使用对数深度缓存
-          alpha: true,
-          antialias: true // antialias:是否执行抗锯齿
-        })
-        // 设置颜色和透明度
-        this.renderer.setClearColor(0x1f2d3d, 1)
-        this.renderer.shadowMap.enabled = true //
-        this.renderer.shadowMapSoft = true
-        // 设置渲染器大小
-        this.renderer.setSize(this.areaWidth, this.areaHeight)
-        // 兼容高清屏幕
-        // this.renderer.setPixelRatio(window.devicePixelRatio)
-        // 将渲染器的DOM元素(this.renderer.domElement)添加到roomDom元素中
-        this.roomDom.appendChild(this.renderer.domElement)
-      } else {
-        const warning = WEBGL.getWebGLErrorMessage()
-        this.roomDom.appendChild(warning)
-      }
-
-      this.labelRenderer = new CSS2DRenderer()
-      this.labelRenderer.setSize(this.areaWidth, this.areaHeight)
-      this.labelRenderer.domElement.style.position = 'absolute'
-      this.labelRenderer.domElement.style.top = '0px'
-      this.roomDom.appendChild(this.labelRenderer.domElement)
+    createScene() {
+      this.scene = new THREE.Scene()
     },
-
     /**
      * 初始化光源,并设置其相关参数
      */
-    initLight() {
-      // const light = new THREE.DirectionalLight(0x999999, 0.1) // 模拟远处类似太阳的光源
-      // light.position.set(0, 500, 0).normalize()
-      // this.scene.add(light)
-
+    createLight() {
       const ambient = new THREE.AmbientLight(0xffffff, 0.85) // AmbientLight,影响整个场景的光源
       ambient.position.set(0, 500, 0)
       this.scene.add(ambient)
+
+      /**
+       * AmbientLight: 环境光，基础光源，它的颜色会被加载到整个场景和所有对象的当前颜色上。
+       * PointLight：点光源，朝着所有方向都发射光线
+       * SpotLight ：聚光灯光源：类型台灯，天花板上的吊灯，手电筒等
+       * DirectionalLight：方向光，又称无限光，从这个发出的光源可以看做是平行光.
+       */
+      // const ambientLight = new THREE.AmbientLight(0xcccccc)
+      // ambientLight.position.set(0, 0, 0)
+      // this.scene.add(ambientLight)
+      // const pointLight = new THREE.PointLight(0x555555)
+      // pointLight.shadow.camera.near = 1
+      // pointLight.shadow.camera.far = 5000
+      // pointLight.position.set(0, 350, 0)
+      // pointLight.castShadow = true // 表示这个光是可以产生阴影的
+      // this.scene.add(pointLight)
+    },
+    /**
+     * 在场景中添加一些辅助对象，有助于理解3D
+     * @param isAxes 是否添加坐标轴辅助
+     * @param isCamera 是否添加添加相机辅助
+     */
+    createHelperObject(isAxes, isCamera) {
+      if (isAxes) {
+        // 添加坐标轴，辅助判断位置
+        const axesHelper = new THREE.AxesHelper(1000)
+        this.scene.add(axesHelper)
+      }
+      if (isCamera) {
+        // 添加相机辅助，用于模拟相机视锥体的辅助对象
+        const cameraHelper = new THREE.CameraHelper(this.camera)
+        this.scene.add(cameraHelper)
+      }
+    },
+    /**
+     * 根据不同的模型数据，添加相应对象
+     * @param object 模型数据，json格式
+     */
+    init3DModel(object) {
+      if (!object.show) {
+        return
+      }
+      /**
+       * box: 立方几何体 BoxGeometry
+       * cylinder: 圆柱几何体 CylinderGeometry
+       * plane: 平面几何体 PlaneGeometry
+       * emptyBox: 模型合并 使用ThreeBSP插件
+       */
+      const objType = object.type
+      let obj = null
+      switch (objType) {
+        case 'box':
+          obj = createBox(object)
+          this.scene.add(obj)
+          break
+        case 'cylinder':
+          obj = createCylinder(object)
+          this.scene.add(obj)
+          break
+        case 'plane':
+          obj = createPlane(object)
+          this.scene.add(obj)
+          break
+        case 'emptyBox':
+          obj = createEmptyBox(object)
+          this.scene.add(obj)
+          break
+      }
+    },
+    initFirstPersonControls() {
+      this.controls = new FirstPersonControls(
+        this.camera
+        // 不能加这个，否则场景不会移动，也不知道为什么
+        // this.renderer.domElement
+      )
+
+      this.controls.enabled = true
+      this.controls.lookVertical = false // 是否可以垂直环顾四周
+      this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
+      this.controls.movementSpeed = 100 // 相机移动速度
+      this.controls.noFly = false
+      this.controls.constrainVertical = false // 约束垂直
+      this.controls.verticalMin = 1.0
+      this.controls.verticalMax = 2.0
+      this.controls.lon = 0 // 进入初始视角x轴的角度
+      this.controls.lat = 0 // 初始视角进入后y轴的角度
+      this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
+      this.clock = new THREE.Clock()
+    },
+    initOrbitControls() {
+      // 鼠标键盘控制
+      this.controls = new OrbitControls(
+        this.camera,
+        this.labelRenderer.domElement
+      )
+      // 视角最小距离
+      this.controls.minDistance = 10
+      // 视角最远距离
+      this.controls.maxDistance = 1600
+      // 最大角度
+      this.controls.maxPolarAngle = Math.PI / 1.6
+    },
+    resetControls() {
+      if (this.controls) {
+        this.controls.dispose()
+      }
+      this.clock = null
+      this.controls = null
+    },
+    menuEvent(e, btnId) {
+      switch (btnId) {
+        case 'btnReset':
+          this.handleReset()
+          break
+        case 'btnStats':
+          // TODO 待优化
+          this.isStats = !this.isStats
+          this.stats = this.isStats ? this.initStats() : null
+          break
+        case 'btnFirstPerson':
+          this.handleFirstPerson()
+          break
+
+        default:
+          break
+      }
+    },
+    handleReset() {
+      new TWEEN.Tween(this.camera.position)
+        .to(
+          {
+            x: 0,
+            y: 500,
+            z: 500
+          },
+          1000
+        )
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .start()
+      this.controls.reset()
+      this.controls.update()
+    },
+    handleFirstPerson() {
+      this.isFirstPerson = !this.isFirstPerson
+      if (this.isFirstPerson) {
+        this.resetControls()
+        this.initFirstPersonControls()
+      } else {
+        this.resetControls()
+        this.initOrbitControls()
+      }
+      console.info('第一人称巡检', this.controls)
     },
     /**
      * 用相机(camera)渲染一个场景(scene)
      */
     render() {
-      if (this.firstPerson) {
-        this.controls.update(this.clock.getDelta())
-      }
-
-      this.renderer.render(this.scene, this.camera)
-
-      this.labelRenderer.render(this.scene, this.camera)
-      // 实时渲染
-      this.myReq = requestAnimationFrame(this.render)
-      this.stats.update()
       TWEEN.update()
-    },
-    /**
-     * 绘制地板，并贴图
-     */
-    createFloor() {
-      // 创建材质并贴上纹理
-      this.textureLoader.load(
-        '/source/textures/floor/floorMy.png',
-        // onLoad回调
-        (texture) => {
-          const boxTextureMaterial = new THREE.MeshStandardMaterial({
-            map: texture, // 颜色贴图
-            metalness: 0.0, // 材质与金属的相似度
-            roughness: 0.7, // 材质的粗糙程度
-            side: THREE.DoubleSide // 定义将要渲染哪一面：正面(THREE.BackSide)，背面(THREE.FrontSide)或两者(THREE.DoubleSide)
-          })
-          // 设置阵列模式   默认ClampToEdgeWrapping  RepeatWrapping：阵列  镜像阵列：MirroredRepeatWrapping
-          texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-          const repeatWidthNum = 4
-          const repeatHeightNum = 7
+      this.isFirstPerson && this.controls.update(this.clock.getDelta())
+      this.stats && this.stats.update()
 
-          // uv两个方向纹理重复数量
-          texture.repeat.set(repeatHeightNum, repeatWidthNum)
-          // 绘制地板
-          const boxGeo = new THREE.BoxBufferGeometry(
-            texture.image.width * repeatHeightNum, // X轴上面的宽度
-            4, // Y轴上面的高度
-            texture.image.height * repeatWidthNum // Z轴上面的深度
-          )
-          const boxMesh = new THREE.Mesh(boxGeo, boxTextureMaterial)
-          boxMesh.name = '地板'
-          boxMesh.position.set(0, 0, 0)
-          this.scene.add(boxMesh)
-        },
-
-        // 目前暂不支持onProgress的回调
-        undefined,
-
-        // onError回调
-        (err) => {
-          console.error('An error happened in textureLoader.', err)
-        }
-      )
-    },
-    /**
-     * 绘制墙壁
-     */
-    createWall() {
-      const wallTexture = this.textureLoader.load(
-        '/source/textures/wall/wall.jpg'
-      )
-      wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping
-      wallTexture.repeat.set(20, 5)
-
-      const material = new THREE.MeshBasicMaterial({
-        map: wallTexture,
-        side: THREE.DoubleSide
-      })
-
-      const geometryAB = new THREE.BoxBufferGeometry(2, 100, 128 * 3)
-
-      const wallMeshBefore = new THREE.Mesh(geometryAB, material)
-      wallMeshBefore.position.set((128 * 4) / 2, 50, 0)
-      wallMeshBefore.name = '墙壁Before'
-      this.scene.add(wallMeshBefore)
-
-      const wallMeshAfter = new THREE.Mesh(geometryAB, material)
-      wallMeshAfter.position.set(-(128 * 4) / 2, 50, 0)
-      wallMeshAfter.name = '墙壁After'
-      this.scene.add(wallMeshAfter)
-
-      const geometryLR = new THREE.BoxGeometry(2, 100, 128 * 4)
-
-      const wallMeshLeft = new THREE.Mesh(geometryLR, material)
-      wallMeshLeft.position.set(0, 50, (128 * 3) / 2)
-      wallMeshLeft.rotation.y += 1.5 * Math.PI
-      wallMeshLeft.name = '墙壁Left'
-      // this.scene.add(wallMeshLeft)
-
-      const wallMeshRight = new THREE.Mesh(geometryLR, material)
-      wallMeshRight.position.set(0, 50, -(128 * 3) / 2)
-      wallMeshRight.rotation.y += 1.5 * Math.PI
-      wallMeshRight.name = '墙壁Right'
-      this.scene.add(wallMeshRight)
-
-      const geometryDong = new THREE.BoxGeometry(2, 80, 34)
-      const dongMesh = new THREE.Mesh(geometryDong, material)
-      dongMesh.position.set(0, 80 / 2, (128 * 3) / 2)
-      dongMesh.rotation.y += 1.5 * Math.PI
-      dongMesh.name = '门洞'
-      const objectsCube = []
-      objectsCube.push(dongMesh)
-      this.createResultBsp(wallMeshLeft, objectsCube, material)
-    },
-    /**
-     * 绘制房门
-     */
-    createDoor() {
-      this.textureLoader.load('/source/textures/door/door1.png', (texture) => {
-        const doormaterial = new THREE.MeshBasicMaterial({
-          map: texture,
-          color: 0xffffff,
-          side: THREE.DoubleSide
-        })
-        // texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-        // texture.repeat.set(5, 5)
-        const doorgeometry = new THREE.BoxGeometry(2, 80, 34)
-        const door = new THREE.Mesh(doorgeometry, doormaterial)
-        door.position.set(0, 80 / 2, (128 * 3) / 2)
-        door.rotation.y += 1.5 * Math.PI
-        door.name = '房门'
-        door.open = false
-        door.toggle = (o) => {
-          if (!door.open) {
-            new TWEEN.Tween(o.rotation).to(
-              {
-                y: o.rotation.y + (Math.PI * 3) / 5
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-
-            new TWEEN.Tween(o.position).to(
-              {
-                x: 34 / 2 + 5,
-                z: (128 * 3) / 2 + 34 / 2
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-
-            door.open = true
-          } else {
-            new TWEEN.Tween(o.rotation).to(
-              {
-                y: o.rotation.y - (Math.PI * 3) / 5
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-            new TWEEN.Tween(o.position).to(
-              {
-                x: 0,
-                z: (128 * 3) / 2
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-
-            door.open = false
-          }
-        }
-        this.scene.add(door)
-      })
-    },
-    /**
-     * 绘制机柜
-     */
-    createCabinet(w, h, d, px, py, pz, c) {
-      // const materialCabinet = new THREE.MeshPhongMaterial({ color: 0x42474c })
-
-      // const geometryCabinet = new THREE.BoxBufferGeometry(60, 150, 30)
-      // const meshCabinet = new THREE.Mesh(geometryCabinet, materialCabinet)
-
-      // const cabientGroup = new THREE.Group()
-      // cabientGroup.add(meshCabinet)
-
-      // cabientGroup.position.set(50, 75, 200)
-      // cabientGroup.name = '机柜1'
-
-      // const cabientGroupClone = cabientGroup.clone()
-      // cabientGroupClone.position.set(-120, 75, 200)
-      // cabientGroupClone.rotation.y += 1.5 * Math.PI
-      // cabientGroupClone.name = '机柜2'
-
-      // const cabientGroupClone1 = cabientGroupClone.clone()
-      // cabientGroupClone1.position.set(-120, 75, 120)
-      // cabientGroupClone1.name = '机柜3'
-
-      // this.scene.add(cabientGroup, cabientGroupClone, cabientGroupClone1)
-      const cabinet = {}
-
-      // 机柜的后
-      const geometry = new THREE.BoxBufferGeometry(w, h, 2)
-      const meterial = new THREE.MeshBasicMaterial({
-        color: 0x777777,
-        opacity: 0.2,
-        transparent: true
-      })
-
-      const back = new THREE.Mesh(geometry, meterial)
-
-      back.position.x = px
-      back.position.y = py + h / 2 + 1
-      back.position.z = pz - d / 2 + 2
-
-      back.container = cabinet
-      back.name = 'back'
-      this.scene.add(back)
-
-      cabinet.back = back
-
-      // 机柜的左、右
-      const meterial1 = new THREE.MeshBasicMaterial({
-        color: 0x777777,
-        opacity: 0.9,
-        transparent: true
-      })
-
-      const left = new THREE.Mesh(geometry, meterial1)
-      const right = new THREE.Mesh(geometry, meterial1)
-
-      left.position.x = px + w / 2 - 1
-      left.position.y = py + h / 2 + 1
-      left.position.z = pz
-      left.rotation.y = Math.PI / 2
-      left.name = 'left'
-
-      right.position.x = px - w / 2 + 1
-      right.position.y = py + h / 2 + 1
-      right.position.z = pz
-      right.rotation.y = -Math.PI / 2
-      right.name = 'right'
-
-      left.container = cabinet
-      right.container = cabinet
-
-      this.scene.add(left)
-      this.scene.add(right)
-
-      cabinet.left = left
-      cabinet.right = right
-
-      // 机柜的底部、顶部
-      const geometry2 = new THREE.BoxBufferGeometry(w, 2, d)
-      const meterial2 = new THREE.MeshBasicMaterial({
-        color: 0x222222,
-        transparent: true
-      })
-
-      const meterialTop = [
-        meterial2, // 相对于机房门方向的右边
-        meterial2, // 相对于机房门方向的左边
-        new THREE.MeshBasicMaterial({
-          // 机柜上面的标签字体
-          map: new THREE.CanvasTexture(this.createText(c)),
-          side: THREE.FrontSide
-        }), // 相对于机房门方向的上
-        meterial2, // 相对于机房门方向的下
-        meterial2, // 相对于机房门方向的前
-        meterial2 // 相对于机房门方向的后
-      ]
-
-      const top = new THREE.Mesh(geometry2, meterialTop)
-      const bottom = new THREE.Mesh(geometry2, meterial2)
-
-      top.position.x = px
-      top.position.y = py + h + 2
-      top.position.z = pz
-      top.name = 'top'
-
-      bottom.position.x = px
-      bottom.position.y = py + 2
-      bottom.position.z = pz
-      bottom.name = 'bottom'
-
-      top.container = cabinet
-      bottom.container = cabinet
-      this.scene.add(top)
-      this.scene.add(bottom)
-
-      cabinet.top = top
-      cabinet.bottom = bottom
-
-      // 机柜门
-      const geometry3 = new THREE.BoxBufferGeometry(w, h, 1)
-      const meterial3 = new THREE.MeshBasicMaterial({
-        color: 0x003333,
-        opacity: 0.5,
-        transparent: true
-      })
-
-      const front = new THREE.Mesh(geometry3, meterial3)
-
-      front.position.x = px
-      front.position.y = py + h / 2 + 1
-      front.position.z = pz + d / 2
-      front.name = 'front'
-      front.open = false
-      front.toggle = (o) => {
-        if (!front.open) {
-          new TWEEN.Tween(o.rotation).to(
-            {
-              y: o.rotation.y + (Math.PI * 3) / 5
-            },
-            1000
-          ).easing(TWEEN.Easing.Quadratic.InOut).start()
-
-          new TWEEN.Tween(o.position).to(
-            {
-              x: o.position.x + w / 2 + 3,
-              z: o.position.z + d / 2
-            },
-            1000
-          ).easing(TWEEN.Easing.Quadratic.InOut).start()
-          front.open = true
-        } else {
-          new TWEEN.Tween(o.rotation).to(
-            {
-              y: o.rotation.y - (Math.PI * 3) / 5
-            },
-            1000
-          ).easing(TWEEN.Easing.Quadratic.InOut).start()
-          new TWEEN.Tween(o.position).to(
-            {
-              x: o.position.x - w / 2 - 3,
-              z: o.position.z - d / 2
-            },
-            1000
-          ).easing(TWEEN.Easing.Quadratic.InOut).start()
-
-          front.open = false
-          // 关闭机柜门时，将机柜中的服务器收起
-          for (var i = 0; i < o.container.servers.length; i++) {
-            o.container.servers[i].toggle(o.container.servers[i], false)
-          }
-        }
-      }
-      front.container = cabinet
-      this.scene.add(front)
-
-      cabinet.front = front
-      cabinet.servers = []
-      if (c && c.servers) {
-        cabinet.info = c
-        for (let i = 0; i < c.servers.length; i++) {
-          const server = this.createServer(
-            w - 4,
-            15,
-            d - 4,
-            px,
-            i === 0 ? 10 : py + 20 * (i + 1),
-            pz + 2,
-            c.servers[i]
-          ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
-          server.container = cabinet
-          server.info = c.servers[i]
-          cabinet.servers.push(server)
-          /**
-           * 服务器异常时的处理逻辑
-           * 1.机柜门打开
-           * 2.服务器标红
-           * 3.机柜顶部显示异常图标
-           */
-          if (c.servers[i].deviceStatus) {
-            this.handleStatus(c.servers[i], c, cabinet)
-          } else {
-            continue
-          }
-        }
-      }
-      cabinet.name = 'cabinet'
-      return cabinet
-    },
-    /**
-     * 绘制服务器
-     */
-    createServer(w, h, d, px, py, pz, config) {
-      // 服务器
-      const texture = this.textureLoader.load(
-        config.skinImgurl
-          ? config.skinImgurl
-          : '/source/textures/computer/4.jpg'
-      )
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-      texture.repeat.set(1, 1)
-
-      const textureBack = this.textureLoader.load(
-        '/source/textures/computer/2.jpg'
-      )
-      textureBack.wrapS = textureBack.wrapT = THREE.RepeatWrapping
-      textureBack.repeat.set(1, 1)
-
-      const materialBasic = new THREE.MeshBasicMaterial({
-        color: 0xbbbbbb
-      })
-      const geometry = new THREE.BoxBufferGeometry(w, h, d)
-      // Create an array of materials to be used in a cube, one for each side
-      const materialArray = []
-      // order to add materials: x+,x-,y+,y-,z+,z-
-      materialArray.push(materialBasic)
-      materialArray.push(materialBasic)
-      materialArray.push(materialBasic)
-      materialArray.push(materialBasic)
-      materialArray.push(new THREE.MeshBasicMaterial({ map: texture }))
-      materialArray.push(new THREE.MeshBasicMaterial({ map: textureBack }))
-      const material = new THREE.MeshFaceMaterial(materialArray)
-
-      const server = new THREE.Mesh(geometry, material)
-
-      server.position.x = px
-      server.position.y = py
-      server.position.z = pz
-      server.name = config.name
-      server.open = false
-      server.toggle = (o, openOrClose) => {
-        // 关闭同一机柜中的其他服务器
-        for (var i = 0; i < o.container.servers.length; i++) {
-          const serversItem = o.container.servers[i]
-          if (o === serversItem) {
-            continue
-          }
-          if (serversItem.position.z !== pz) {
-            new TWEEN.Tween(serversItem.position).to(
-              {
-                z: serversItem.position.z - d / 2
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-          }
-        }
-
-        if (o.position.z === pz) {
-          if (openOrClose == null || openOrClose) {
-            new TWEEN.Tween(o.position).to(
-              {
-                z: o.position.z + d / 2
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-            // o.position.z = o.position.z + d / 2
-            // 打开服务器时，处理其他逻辑
-            // openServer(o)
-            server.open = true
-          }
-        } else {
-          if (openOrClose == null || !openOrClose) {
-            new TWEEN.Tween(o.position).to(
-              {
-                z: o.position.z - d / 2
-              },
-              1000
-            ).easing(TWEEN.Easing.Quadratic.InOut).start()
-            // o.position.z = o.position.z - d / 2
-            // 关上服务器时，处理其他逻辑
-            // closeServer(o)
-            server.open = false
-          }
-        }
-      }
-      // 异常设备的处理
-      if (config.deviceStatus) {
-        const geometryStatus = new THREE.BoxGeometry(w, h, d)
-        const meterialStatus = new THREE.MeshBasicMaterial({
-          color: 0xff4d4d,
-          opacity: 0.6,
-          transparent: true
-        })
-        const meshStatus = new THREE.Mesh(geometryStatus, meterialStatus)
-        meshStatus.position.x = px
-        meshStatus.position.y = py
-        meshStatus.position.z = pz
-        meshStatus.name = config.name
-        meshStatus.info = config
-        this.scene.add(meshStatus)
-      }
-
-      this.scene.add(server)
-
-      return server
-    },
-    /**
-     * 服务器异常时的处理逻辑:
-     * 1.机柜门打开
-     * 2.服务器标红
-     * 3.机柜顶部显示异常图标
-     */
-    handleStatus(serversInfo, cabinetInfo, cabinetMesh) {
-      const text = document.createElement('div')
-      text.className = 'label'
-      text.innerHTML =
-        cabinetInfo.name +
-        '告警: <br/>' +
-        serversInfo.name +
-        '运行' +
-        (serversInfo.deviceStatus ? '异常' : '正常') // 显示详细信息
-
-      const label = new CSS2DObject(text)
-      label.position.set(
-        cabinetMesh.top.position.x - cabinetInfo.position.x + 100 / 2,
-        cabinetMesh.top.position.y - cabinetInfo.position.y - 50,
-        cabinetMesh.top.position.z - cabinetInfo.position.z
-      )
-      cabinetMesh.top.add(label)
-    },
-
-    /**
-     * 绘制墙壁上的门洞，通过两个几何体相减得到的差集生成BSP对象
-     */
-    createResultBsp(bsp, objectsCube, material) {
-      let BSP = new ThreeBSP(bsp)
-      for (var i = 0; i < objectsCube.length; i++) {
-        const lessBsp = new ThreeBSP(objectsCube[i])
-        BSP = BSP.subtract(lessBsp)
-      }
-      const result = BSP.toMesh(material)
-      result.material.flatshading = THREE.FlatShading // 定义材质是否使用平面着色进行渲染
-      result.geometry.computeFaceNormals() // 重新计算几何体侧面法向量
-      result.geometry.computeVertexNormals()
-      result.material.needsUpdate = true // 更新纹理
-      result.geometry.buffersNeedUpdate = true
-      result.geometry.uvsNeedUpdate = true
-      this.scene.add(result)
-    },
-    /**
-     * 加载字体
-     **/
-    createText(cabinetInfo) {
-      const width = 100
-      const height = 40
-      var canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-
-      var ctx = canvas.getContext('2d')
-      ctx.fillRect(0, 0, width, height)
-
-      ctx.font = 20 + 'px " bold'
-      ctx.fillStyle = '#ffffff'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(cabinetInfo.name, width / 2, height / 2)
-      return canvas
+      // 实时渲染
+      this.myReqAnima = requestAnimationFrame(this.render)
+      this.renderer.render(this.scene, this.camera)
+      this.labelRenderer.render(this.scene, this.camera)
     },
     // 初始化性能插件
     initStats() {
@@ -946,8 +470,6 @@ export default {
         if (selectObject.toggle && typeof selectObject.toggle === 'function') {
           selectObject.toggle(selectObject)
         }
-        // this.camera.fov = 35
-        // this.camera.updateProjectionMatrix()
       }, 250)
     }
   }
