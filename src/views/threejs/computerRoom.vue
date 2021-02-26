@@ -185,15 +185,14 @@ export default {
       }
     },
     handleReset() {
-      const tweenRotation = new TWEEN.Tween(this.camera.position).to(
+      new TWEEN.Tween(this.camera.position).to(
         {
           x: 0,
           y: 500,
           z: 500
         },
         1000
-      )
-      tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+      ).easing(TWEEN.Easing.Quadratic.InOut).start()
       this.controls.reset()
       this.controls.update()
     },
@@ -227,16 +226,14 @@ export default {
         // this.controls.update(this.clock.getDelta())
         // this.render()
 
-        // const tweenRotation = new TWEEN.Tween(this.camera.position).to(
+        // new TWEEN.Tween(this.camera.position).to(
         //   {
         //     x: 0,
         //     y: 200,
         //     z: (128 * 3) / 2
         //   },
         //   1000
-        // )
-
-        // tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+        // ).easing(TWEEN.Easing.Quadratic.InOut).start()
       } else {
         if (this.controls) {
           this.controls.dispose()
@@ -453,40 +450,36 @@ export default {
         door.open = false
         door.toggle = (o) => {
           if (!door.open) {
-            const tweenRotation = new TWEEN.Tween(o.rotation).to(
+            new TWEEN.Tween(o.rotation).to(
               {
                 y: o.rotation.y + (Math.PI * 3) / 5
               },
               1000
-            )
-            tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
 
-            const tweenPosition = new TWEEN.Tween(o.position).to(
+            new TWEEN.Tween(o.position).to(
               {
                 x: 34 / 2 + 5,
                 z: (128 * 3) / 2 + 34 / 2
               },
               1000
-            )
-            tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
 
             door.open = true
           } else {
-            const tweenRotation = new TWEEN.Tween(o.rotation).to(
+            new TWEEN.Tween(o.rotation).to(
               {
                 y: o.rotation.y - (Math.PI * 3) / 5
               },
               1000
-            )
-            tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
-            const tweenPosition = new TWEEN.Tween(o.position).to(
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
+            new TWEEN.Tween(o.position).to(
               {
                 x: 0,
                 z: (128 * 3) / 2
               },
               1000
-            )
-            tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
 
             door.open = false
           }
@@ -630,39 +623,35 @@ export default {
       front.open = false
       front.toggle = (o) => {
         if (!front.open) {
-          const tweenRotation = new TWEEN.Tween(o.rotation).to(
+          new TWEEN.Tween(o.rotation).to(
             {
               y: o.rotation.y + (Math.PI * 3) / 5
             },
             1000
-          )
-          tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
+          ).easing(TWEEN.Easing.Quadratic.InOut).start()
 
-          const tweenPosition = new TWEEN.Tween(o.position).to(
+          new TWEEN.Tween(o.position).to(
             {
               x: o.position.x + w / 2 + 3,
               z: o.position.z + d / 2
             },
             1000
-          )
-          tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+          ).easing(TWEEN.Easing.Quadratic.InOut).start()
           front.open = true
         } else {
-          const tweenRotation = new TWEEN.Tween(o.rotation).to(
+          new TWEEN.Tween(o.rotation).to(
             {
               y: o.rotation.y - (Math.PI * 3) / 5
             },
             1000
-          )
-          tweenRotation.easing(TWEEN.Easing.Quadratic.InOut).start()
-          const tweenPosition = new TWEEN.Tween(o.position).to(
+          ).easing(TWEEN.Easing.Quadratic.InOut).start()
+          new TWEEN.Tween(o.position).to(
             {
               x: o.position.x - w / 2 - 3,
               z: o.position.z - d / 2
             },
             1000
-          )
-          tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+          ).easing(TWEEN.Easing.Quadratic.InOut).start()
 
           front.open = false
           // 关闭机柜门时，将机柜中的服务器收起
@@ -756,27 +745,23 @@ export default {
             continue
           }
           if (serversItem.position.z !== pz) {
-            const tweenPosition = new TWEEN.Tween(serversItem.position).to(
+            new TWEEN.Tween(serversItem.position).to(
               {
                 z: serversItem.position.z - d / 2
               },
               1000
-            )
-            tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
-
-            // serversItem.position.z = serversItem.position.z - d / 2
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
           }
         }
 
         if (o.position.z === pz) {
           if (openOrClose == null || openOrClose) {
-            const tweenPosition = new TWEEN.Tween(o.position).to(
+            new TWEEN.Tween(o.position).to(
               {
                 z: o.position.z + d / 2
               },
               1000
-            )
-            tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
             // o.position.z = o.position.z + d / 2
             // 打开服务器时，处理其他逻辑
             // openServer(o)
@@ -784,13 +769,12 @@ export default {
           }
         } else {
           if (openOrClose == null || !openOrClose) {
-            const tweenPosition = new TWEEN.Tween(o.position).to(
+            new TWEEN.Tween(o.position).to(
               {
                 z: o.position.z - d / 2
               },
               1000
-            )
-            tweenPosition.easing(TWEEN.Easing.Quadratic.InOut).start()
+            ).easing(TWEEN.Easing.Quadratic.InOut).start()
             // o.position.z = o.position.z - d / 2
             // 关上服务器时，处理其他逻辑
             // closeServer(o)
