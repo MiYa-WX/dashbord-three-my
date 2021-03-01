@@ -523,7 +523,7 @@ export default {
                 .easing(TWEEN.Easing.Quadratic.InOut)
                 .start()
 
-              // this.camera.updateProjectionMatrix()
+              this.camera.updateProjectionMatrix()
             }
           } else {
             tooltipDom.style.display = 'none' // 隐藏说明性标签
