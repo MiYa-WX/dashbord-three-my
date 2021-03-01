@@ -25,6 +25,24 @@
       <div id="stasWrap"> </div>
     </div>
     <div v-else ref="notSuport"> </div>
+
+    <el-dialog
+      :title="cameraName + '视频监控'"
+      :visible.sync="dialogVisible"
+      width="50%"
+      :before-close="handleDialogClose"
+      :append-to-body="true"
+      :close-on-click-modal="false"
+    >
+      <video
+        class="video-wrapper"
+        src="https://vjs.zencdn.net/v/oceans.mp4"
+        controls="controls"
+        preload="auto"
+      >
+        your browser does not support the video tag
+      </video>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -55,6 +73,8 @@ export default {
   name: 'MeetingRoom',
   data() {
     return {
+      dialogVisible: false,
+      cameraName: '',
       btnsConfig, // 操作按钮配置项
       areaWidth: 0, // 窗口宽度
       areaHeight: 0, // 窗口高度
@@ -109,6 +129,8 @@ export default {
         c
       )
     }
+    // 绘制监控摄像头模型
+    createCylinder(this)
 
     // // 添加3D模型
     // for (let i = 0; i < objectModel.length; i++) {
@@ -140,6 +162,13 @@ export default {
     this.labelRenderer = null
   },
   methods: {
+    handleDialogClose() {
+      this.dialogVisible = false
+    },
+    handleDialogOpen(cameraName) {
+      this.dialogVisible = true
+      this.cameraName = cameraName
+    },
     /**
      * 初始化三维场景的中全局变量
      */
@@ -206,8 +235,8 @@ export default {
       )
       this.camera.name = 'mainCamera'
       // // 设置摄像机位置
-      // this.camera.position.set(0, 500, -500)
-      this.camera.position.set(0, 1000, -1800)
+      this.camera.position.set(0, 500, 500)
+      // this.camera.position.set(0, 1000, -1800)
       // 相机指向中心位置
       this.camera.lookAt({ x: 0, y: 0, z: 0 })
     },
@@ -339,9 +368,15 @@ export default {
           this.handleReset()
           break
         case 'btnStats':
-          // TODO 待优化
           this.isStats = !this.isStats
-          this.stats = this.isStats ? this.initStats() : null
+          if (this.isStats) {
+            this.stats = this.initStats()
+          } else {
+            const stasWrapDom = document.getElementById('stasWrap')
+            stasWrapDom.removeChild(this.stats.domElement)
+            this.stats.domElement = null
+            this.stats = null
+          }
           break
         case 'btnFirstPerson':
           this.handleFirstPerson()
@@ -352,6 +387,13 @@ export default {
       }
     },
     handleReset() {
+      // 场景复位时，先取消第一人称漫游状态
+      if (this.isFirstPerson) {
+        this.isFirstPerson = false
+        this.resetControls()
+        this.initOrbitControls()
+      }
+
       new TWEEN.Tween(this.camera.position)
         .to(
           {
@@ -363,16 +405,17 @@ export default {
         )
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start()
+
+      this.camera.updateProjectionMatrix()
       this.controls.reset()
       this.controls.update()
     },
     handleFirstPerson() {
       this.isFirstPerson = !this.isFirstPerson
+      this.resetControls()
       if (this.isFirstPerson) {
-        this.resetControls()
         this.initFirstPersonControls()
       } else {
-        this.resetControls()
         this.initOrbitControls()
       }
       console.info('第一人称巡检', this.controls)
@@ -452,6 +495,10 @@ export default {
 
         if (!selectObject.name.includes('服务器')) {
           tooltipDom.style.display = 'none' // 隐藏说明性标签
+
+          if (selectObject.name.includes('摄像头')) {
+            this.handleDialogOpen(selectObject.name)
+          }
         } else {
           if (!selectObject.open) {
             tooltipDom.style.display = 'block' // 显示说明性标签
@@ -463,6 +510,21 @@ export default {
               '<br/>' +
               '运行' +
               (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
+            if (selectObject.info.deviceStatus) {
+              new TWEEN.Tween(this.camera.position)
+                .to(
+                  {
+                    x: (this.camera.position.x + selectObject.position.x) / 2,
+                    y: 200,
+                    z: (this.camera.position.z + selectObject.position.z) / 2
+                  },
+                  1000
+                )
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start()
+
+              // this.camera.updateProjectionMatrix()
+            }
           } else {
             tooltipDom.style.display = 'none' // 隐藏说明性标签
           }
@@ -520,5 +582,8 @@ export default {
     font-size: 18px;
     cursor: pointer;
   }
+}
+.video-wrapper {
+  width: 100%;
 }
 </style>

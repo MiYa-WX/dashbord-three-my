@@ -149,7 +149,59 @@ function createBox(obj) {
 /**
  * 创建圆柱模型
  */
-function createCylinder() {}
+function createCylinder(scope) {
+  const textureLoader = new THREE.TextureLoader()
+
+  // 服务器
+  const texture = textureLoader.load('/source/textures/computer/sxt.png')
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(1, 1)
+
+  const cylinderMaterial = new THREE.MeshBasicMaterial({
+    map: texture,
+    color: 0x252525,
+    side: THREE.DoubleSide
+  })
+  const radiusTop = 5 // 圆柱的顶部半径，默认值是1。
+  const radiusBottom = 5 // 圆柱的底部半径，默认值是1。
+  const height = 15 // 圆柱的高度，默认值是1。
+  const cylinderGeometry = new THREE.CylinderGeometry(
+    radiusTop,
+    radiusBottom,
+    height,
+    32
+  )
+
+  const materialArray = []
+  materialArray.push(cylinderMaterial)
+  materialArray.push(new THREE.MeshBasicMaterial({ map: texture }))
+  materialArray.push(cylinderMaterial)
+  const material = new THREE.MeshFaceMaterial(materialArray)
+
+  const cylinder = new THREE.Mesh(cylinderGeometry, material)
+  cylinder.rotateX(-0.4 * Math.PI)
+  cylinder.rotateY(0)
+  cylinder.rotateZ(0.6 * Math.PI) // Math.PI表示180°
+  cylinder.position.set(
+    (128 * 4) / 2 - height / 2 - 0.4 * Math.PI,
+    100 - 10,
+    -(128 * 3) / 2 + 10
+  )
+  cylinder.name = '右上摄像头'
+  scope.scene.add(cylinder)
+
+  const cylinder1 = cylinder.clone()
+  cylinder1.rotateX(-0.4 * Math.PI)
+  cylinder1.rotateY(0)
+  cylinder1.rotateZ(0.6 * Math.PI) // Math.PI表示180°
+  cylinder1.position.set(
+    -((128 * 4) / 2 - height / 2 - 0.4 * Math.PI),
+    100 - 10,
+    -(128 * 3) / 2 + 10
+  )
+  cylinder1.name = '左上摄像头'
+  scope.scene.add(cylinder1)
+}
 /**
  * 创建平面模型
  */

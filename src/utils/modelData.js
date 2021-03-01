@@ -801,18 +801,18 @@ export const btnsConfig = [
     btnIcon: 'el-icon-map-location',
     event: () => {}
   },
-  {
-    btnId: 'btnAlarm',
-    btnTitle: '告警',
-    btnIcon: 'el-icon-warning',
-    event: function() {}
-  },
-  {
-    btnId: 'btnUsage',
-    btnTitle: '烟雾模拟',
-    btnIcon: 'el-icon-smoking',
-    event: function() {}
-  },
+  // {
+  //   btnId: 'btnAlarm',
+  //   btnTitle: '告警',
+  //   btnIcon: 'el-icon-warning',
+  //   event: function() {}
+  // },
+  // {
+  //   btnId: 'btnUsage',
+  //   btnTitle: '烟雾模拟',
+  //   btnIcon: 'el-icon-smoking',
+  //   event: function() {}
+  // },
   {
     btnId: 'btnConnection',
     btnTitle: '走线管理',
