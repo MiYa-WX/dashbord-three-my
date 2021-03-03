@@ -191,6 +191,7 @@ export default {
       this.areaHeight = window.innerHeight - 60
       this.roomDom = document.getElementById('computerRoom')
       this.stats = this.isStats ? this.initStats() : null
+      this.mouse = new THREE.Vector2()
     },
     /**
      * 创建渲染器,并设置渲染器的相关参数
@@ -467,15 +468,15 @@ export default {
      * 窗口变化的自适应
      */
     onWindowResize() {
-      const width = window.innerWidth
-      const height = window.innerHeight
+      const width = window.innerWidth - 210
+      const height = window.innerHeight - 60
       this.camera.aspect = width / height
       // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
       this.camera.updateProjectionMatrix()
       // this.controls.handleResize()
       // 重置渲染器输出画布canvas尺寸
-      this.renderer.setSize(width, height - 60)
-      this.labelRenderer.setSize(width, height - 60)
+      this.renderer.setSize(width, height)
+      this.labelRenderer.setSize(width, height)
     },
     /**
      * 点击事件
@@ -490,12 +491,22 @@ export default {
         const x = event.clientX - 210
         const y = event.clientY - 60
 
-        const mouse = new THREE.Vector2()
         // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
-        mouse.x = (x / this.areaWidth) * 2 - 1
-        mouse.y = -(y / this.areaHeight) * 2 + 1
-
-        const vector = new THREE.Vector3(mouse.x, mouse.y, 1)
+        // mouse.x = (x / this.areaWidth) * 2 - 1
+        // mouse.y = -(y / this.areaHeight) * 2 + 1
+        this.mouse.x =
+          ((event.clientX - this.roomDom.getBoundingClientRect().left) /
+            this.roomDom.offsetWidth) *
+            2 -
+          1
+        this.mouse.y =
+          -(
+            (event.clientY - this.roomDom.getBoundingClientRect().top) /
+            this.roomDom.offsetHeight
+          ) *
+            2 +
+          1
+        const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1)
         vector.unproject(this.camera)
         const raycaster = new THREE.Raycaster(
           this.camera.position,
