@@ -567,6 +567,9 @@ export const objectModel = [
   //     skinColor: 0x8ac9e2
   //   }
   // },
+
+  // // 网线布局
+  // {},
   {
     cabinet: {
       show: true,

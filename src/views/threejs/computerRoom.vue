@@ -47,12 +47,8 @@
 </template>
 <script>
 import * as THREE from 'three'
-const ThreeBSP = require('three-js-csg')(THREE)
 import { WEBGL } from 'three/examples/jsm/WebGL.js'
-import {
-  CSS2DRenderer,
-  CSS2DObject
-} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
@@ -66,7 +62,8 @@ import {
   createFloor,
   createWall,
   createDoor,
-  createCabinet
+  createCabinet,
+  createLines
 } from '@/utils/createModelObject'
 
 export default {
@@ -79,7 +76,8 @@ export default {
       areaWidth: 0, // 窗口宽度
       areaHeight: 0, // 窗口高度
       isFirstPerson: false, // 是否开启第一人称漫游
-      isStats: true // 是否开启性能检测控件
+      isStats: true, // 是否开启性能检测控件
+      isShowLines: false // 是否开启走线管理
     }
   },
   computed: {
@@ -131,6 +129,8 @@ export default {
     }
     // 绘制监控摄像头模型
     createCylinder(this)
+    // 绘制线路
+    this.isShowLines && createLines(this)
 
     // // 添加3D模型
     // for (let i = 0; i < objectModel.length; i++) {
@@ -144,6 +144,8 @@ export default {
     }
     this.render()
 
+    this.roomDom.addEventListener('click', this.onClick, false)
+    this.roomDom.addEventListener('dbclick', this.onClick, false)
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
@@ -160,6 +162,9 @@ export default {
     this.resetControls()
     this.stats = null
     this.labelRenderer = null
+
+    // const gl = this.renderer.domElement.getContext('webgl')
+    // gl && gl.getExtension('WEBGL_lose_context').loseContext()
   },
   methods: {
     handleDialogClose() {
@@ -381,7 +386,21 @@ export default {
         case 'btnFirstPerson':
           this.handleFirstPerson()
           break
-
+        case 'btnConnection':
+          this.isShowLines = !this.isShowLines
+          if (this.isShowLines) {
+            createLines(this)
+          } else {
+            for (let i = this.scene.children.length - 1; i >= 0; i--) {
+              const element = this.scene.children[i]
+              if (element.type === 'Line') {
+                element.geometry.dispose() // 删除几何体
+                element.material.dispose() // 删除材质
+                this.scene.remove(element)
+              }
+            }
+          }
+          break
         default:
           break
       }
@@ -510,21 +529,21 @@ export default {
               '<br/>' +
               '运行' +
               (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
-            if (selectObject.info.deviceStatus) {
-              new TWEEN.Tween(this.camera.position)
-                .to(
-                  {
-                    x: (this.camera.position.x + selectObject.position.x) / 2,
-                    y: 200,
-                    z: (this.camera.position.z + selectObject.position.z) / 2
-                  },
-                  1000
-                )
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .start()
+            // if (selectObject.info.deviceStatus) {
+            //   new TWEEN.Tween(this.camera.position)
+            //     .to(
+            //       {
+            //         x: (this.camera.position.x + selectObject.position.x) / 2,
+            //         y: 200,
+            //         z: (this.camera.position.z + selectObject.position.z) / 2
+            //       },
+            //       1000
+            //     )
+            //     .easing(TWEEN.Easing.Quadratic.InOut)
+            //     .start()
 
-              this.camera.updateProjectionMatrix()
-            }
+            //   this.camera.updateProjectionMatrix()
+            // }
           } else {
             tooltipDom.style.display = 'none' // 隐藏说明性标签
           }

@@ -194,8 +194,8 @@ export default {
       )
       imageData = image.data
 
-      for (var i = 0, l = imageData.length; i < l; i += 4) {
-        var v = ~~(Math.random() * 5)
+      for (let i = 0, l = imageData.length; i < l; i += 4) {
+        const v = ~~(Math.random() * 5)
 
         imageData[i] += v
         imageData[i + 1] += v

@@ -1,10 +1,7 @@
 import * as THREE from 'three'
 const ThreeBSP = require('three-js-csg')(THREE)
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
-import {
-  CSS2DRenderer,
-  CSS2DObject
-} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 /**
  * 创建盒子模型
@@ -205,30 +202,104 @@ function createCylinder(scope) {
 /**
  * 创建平面模型
  */
-function createPlane() {}
+function createPlane(scope) {}
 /**
  * 创建空盒子模型
  */
-function createEmptyBox() {}
-
+function createEmptyBox(scope) {}
+/**
+ * 创建线模型
+ */
+function createLines(scope) {
+  const linesModel = [
+    {
+      source: { x: 0, y: 0, z: 0 },
+      target: { x: (128 * 4) / 2 - 5, y: 5, z: 0 }
+    },
+    {
+      source: { x: 0, y: 0, z: 0 },
+      target: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
+      position: { x: 0, y: 0, z: 10 },
+      style: {
+        color: 0xd99e39,
+        linewidth: 2
+      }
+    },
+    {
+      source: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
+      target: { x: (128 * 4) / 2 - 5, y: 105, z: 0 }
+    },
+    {
+      source: { x: (128 * 4) / 2 - 5, y: 105, z: 0 },
+      target: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 }
+    },
+    {
+      source: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 },
+      target: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 }
+    },
+    {
+      source: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 },
+      target: { x: -20, y: 5, z: 0 }
+    },
+    {
+      source: { x: -20, y: 5, z: 0 },
+      target: { x: -20, y: 5, z: -110 }
+    },
+    {
+      source: { x: -20, y: 5, z: -110 },
+      target: { x: -(128 * 4) / 2 + 5, y: 5, z: -110 }
+    }
+  ]
+  // 添加线模型
+  for (let i = 0; i < linesModel.length; i++) {
+    const object = linesModel[i]
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(object.source.x, object.source.y, object.source.z),
+      new THREE.Vector3(object.target.x, object.target.y, object.target.z)
+    ])
+    const points = curve.getPoints(50) // 将曲线划分成的段数
+    const geometryLine = new THREE.BufferGeometry().setFromPoints(points)
+    let materialLine = null
+    if (object.style != null && typeof object.style !== 'undefined') {
+      materialLine = new THREE.LineBasicMaterial({
+        color: object.style.color,
+        linewidth: object.style.linewidth
+      })
+    } else {
+      materialLine = new THREE.LineBasicMaterial({
+        color: 0xff0000,
+        linewidth: 1
+      })
+    }
+    const curveObject = new THREE.Line(geometryLine, materialLine)
+    if (object.position != null && typeof object.position !== 'undefined') {
+      curveObject.position.set(
+        object.position.x,
+        object.position.y,
+        object.position.z
+      )
+    }
+    scope.scene.add(curveObject)
+  }
+}
 /**
  * 皮肤
  */
 function createSkinOptionOnj(
-  _this,
+  scope,
   flength,
   fwidth,
   _obj,
   _cube,
   _cubefacenub
 ) {
-  // if (_this.commonFunc.hasObj(_obj)) {
-  //     if (_this.commonFunc.hasObj(_obj.imgurl)) {
+  // if (scope.commonFunc.hasObj(_obj)) {
+  //     if (scope.commonFunc.hasObj(_obj.imgurl)) {
   //         return {
-  //             map: _this.createSkin(flength, fwidth, _obj),transparent:true
+  //             map: scope.createSkin(flength, fwidth, _obj),transparent:true
   //         }
   //     } else {
-  //         if (_this.commonFunc.hasObj(_obj.skinColor)) {
+  //         if (scope.commonFunc.hasObj(_obj.skinColor)) {
   //             _cube.faces[_cubefacenub].color.setHex(_obj.skinColor);
   //             _cube.faces[_cubefacenub + 1].color.setHex(_obj.skinColor);
   //         }
@@ -814,5 +885,6 @@ export {
   createFloor,
   createWall,
   createDoor,
-  createCabinet
+  createCabinet,
+  createLines
 }

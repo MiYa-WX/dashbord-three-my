@@ -72,12 +72,9 @@ export default {
         new THREE.Vector3(5, -5, 5),
         new THREE.Vector3(10, 0, 10)
       ])
-
       const points = curve.getPoints(50) // 将曲线划分成的段数
       const geometryLine = new THREE.BufferGeometry().setFromPoints(points)
-
       const materialLine = new THREE.LineBasicMaterial({ color: 0xff0000 })
-
       // Create the final object to add to the scene
       const curveObject = new THREE.Line(geometryLine, materialLine)
       curveObject.position.set(-200, -50, 0)
@@ -85,19 +82,34 @@ export default {
 
       const curve1 = new THREE.CatmullRomCurve3([
         new THREE.Vector3(-10, 0, 10),
-        new THREE.Vector3(-5, 0, 10),
-        new THREE.Vector3(0, 0, 10),
-        new THREE.Vector3(5, 0, 10),
-        new THREE.Vector3(10, 0, 10)
+        new THREE.Vector3(-310, 0, 10)
       ])
-
       const points1 = curve1.getPoints(50) // 将曲线划分成的段数
       const geometryLine1 = new THREE.BufferGeometry().setFromPoints(points1)
-
       // Create the final object to add to the scene
       const curveObject1 = new THREE.Line(geometryLine1, materialLine)
       curveObject1.position.set(-250, -150, 0)
       this.scene.add(curveObject1)
+
+      const material3D = new THREE.MeshBasicMaterial({
+        color: 0x4488ff,
+        transparent: false
+      })
+      // THREE.CatmullRomCurve3方法可以将一组顶点生成一条平滑的曲线
+      const curve11 = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(100, 0, 0)
+      ])
+      const tubeGeometry = new THREE.TubeGeometry(curve11, 32, 0.5, 32, false)
+      // 将模型对象赋值给tubeMesh并添加到场景当中
+      const tubeMesh = new THREE.Mesh(tubeGeometry, material3D) // 网格模型对象Mesh
+      tubeMesh.position.set(-300, 0, 0)
+      this.scene.add(tubeMesh)
+
+      // 将模型对象赋值给tubeMesh并添加到场景当中
+      const tubeMesh1 = tubeMesh.clone() // 网格模型对象Mesh
+      tubeMesh1.position.set(-300, 10, 0)
+      this.scene.add(tubeMesh1)
 
       /**
        * 测试ThreeBSP: 简易铜钱形状几何体 ok
@@ -155,6 +167,11 @@ export default {
       this.controls.update()
       this.animationRender()
       window.addEventListener('resize', this.onWindowResize) // 添加窗口监听事件（resize-onresize即窗口或框架被重新调整大小）
+    },
+    customSinCurve(scale) {
+      THREE.Curve.call(this)
+
+      this.scale = scale === undefined ? 1 : scale
     },
     animationRender() {
       // 执行渲染操作   指定场景、相机作为参数
