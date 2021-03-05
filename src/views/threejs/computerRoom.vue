@@ -77,7 +77,8 @@ export default {
       areaHeight: 0, // 窗口高度
       isFirstPerson: false, // 是否开启第一人称漫游
       isStats: true, // 是否开启性能检测控件
-      isShowLines: false // 是否开启走线管理
+      isShowLines: false, // 是否开启走线管理
+      isShowAuto: false // 是否开启自动路径巡检
     }
   },
   computed: {
@@ -387,6 +388,9 @@ export default {
         case 'btnFirstPerson':
           this.handleFirstPerson()
           break
+        case 'btnAuto':
+          this.handleAutoCheck()
+          break
         case 'btnConnection':
           this.isShowLines = !this.isShowLines
           if (this.isShowLines) {
@@ -440,6 +444,49 @@ export default {
       }
       console.info('第一人称巡检', this.controls)
     },
+    handleAutoCheck() {
+      this.isShowAuto = !this.isShowAuto
+      const curObject = this.scene.getObjectByName('1-1号服务器')
+      // const curObjectFront = curObject.getObjectByName('front')
+
+      if (this.isShowAuto) {
+        new TWEEN.Tween(this.camera.position)
+          .to(
+            {
+              x:
+                (curObject.geometry.parameters.width + curObject.position.x) /
+                2,
+              y: 90,
+              z: 85
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .onUpdate(() => {
+            this.camera.lookAt(curObject.position)
+            let cameraOrtho = null
+            let sceneOrtho = null
+            cameraOrtho = new THREE.OrthographicCamera(
+              -this.areaWidth / 2,
+              this.areaWidth / 2,
+              this.areaHeight / 2,
+              -this.areaHeight / 2,
+              1,
+              1000
+            )
+            cameraOrtho.position.z = 10
+
+            sceneOrtho = new THREE.Scene()
+            // const spriteMaterial = new THREE.SpriteMaterial({ color: 0xffffff })
+            // const sprite = new THREE.Sprite(spriteMaterial)
+            // sceneOrtho.add(sprite)
+            this.renderAuto(sceneOrtho, cameraOrtho)
+          })
+          .start()
+      } else {
+        this.handleReset()
+      }
+    },
     /**
      * 用相机(camera)渲染一个场景(scene)
      */
@@ -452,6 +499,16 @@ export default {
       this.myReqAnima = requestAnimationFrame(this.render)
       this.renderer.render(this.scene, this.camera)
       this.labelRenderer.render(this.scene, this.camera)
+    },
+    renderAuto(scene, camera) {
+      requestAnimationFrame(() => {
+        if (this.camera.position.y < 120) {
+          this.camera.position.y += 0.001
+        }
+        this.renderAuto(scene, camera)
+        this.renderer.clearDepth()
+        this.renderer.render(scene, camera)
+      })
     },
     // 初始化性能插件
     initStats() {

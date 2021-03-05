@@ -141,6 +141,23 @@ export default {
       // 环境光
       const ambient = new THREE.AmbientLight('#444444')
       this.scene.add(ambient)
+
+      // var geometry11 = new THREE.Geometry()
+      // var material11 = new THREE.MeshLambertMaterial({ color: 0xf33f66 })
+      // var g = new THREE.BoxGeometry(2, 2, 2)
+      // var m = new THREE.MeshLambertMaterial({ color: 0xffff66 })
+      // var cube2 = new THREE.Mesh(g, m)
+      // cube2.updateMatrix()
+      // geometry11.merge(cube2.geometry, cube2.matrix)
+
+      // var cube3 = new THREE.Mesh(g, m)
+      // cube3.position.x += 3
+      // cube3.updateMatrix() // 这个用来把合并前的变换矩阵带进geometry保证对象合并后正确的变换
+      // geometry11.merge(cube3.geometry, cube3.matrix)
+      // var cube = new THREE.Mesh(geometry11, material11)
+      // cube.position.z -= 5
+      // this.scene.add(cube)
+      // console.info('11111111111', this.scene)
       /**
        * 相机设置
        */

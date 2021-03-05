@@ -653,8 +653,7 @@ export const objectModel = [
           name: '3-1号服务器',
           ip: '',
           apps: '',
-          skinImgurl: '/source/textures/computer/3.jpg',
-          deviceStatus: 1 // 0正常  1异常
+          skinImgurl: '/source/textures/computer/3.jpg'
         }
       ]
     }
@@ -705,7 +704,8 @@ export const objectModel = [
           name: '6-1号服务器',
           ip: '',
           apps: '',
-          skinImgurl: '/source/textures/computer/3.jpg'
+          skinImgurl: '/source/textures/computer/3.jpg',
+          deviceStatus: 1 // 0正常  1异常
         }
       ]
     }
@@ -803,6 +803,14 @@ export const btnsConfig = [
     btnTitle: '第一人称巡检',
     btnIcon: 'el-icon-map-location',
     event: () => {}
+  },
+  {
+    btnId: 'btnAuto',
+    btnTitle: '机柜巡检',
+    btnIcon: 'el-icon-thumb',
+    event: function() {
+      console.info('qqq')
+    }
   },
   // {
   //   btnId: 'btnAlarm',

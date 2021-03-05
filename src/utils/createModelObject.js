@@ -213,41 +213,65 @@ function createEmptyBox(scope) {}
 function createLines(scope) {
   const linesModel = [
     {
-      source: { x: 0, y: 0, z: 0 },
-      target: { x: (128 * 4) / 2 - 5, y: 5, z: 0 }
+      source: { x: 20, y: 5, z: 0 },
+      target: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
+      type: 'line',
+      name: 'line1',
+      id: '1'
     },
     {
-      source: { x: 0, y: 0, z: 0 },
+      source: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
+      target: { x: (128 * 4) / 2 - 5, y: 105, z: 0 },
+      type: 'line',
+      name: 'line2',
+      id: '2'
+    },
+    {
+      source: { x: (128 * 4) / 2 - 5, y: 105, z: 0 },
+      target: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 },
+      type: 'line',
+      name: 'line3',
+      id: '3'
+    },
+    {
+      source: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 },
+      target: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 },
+      type: 'line',
+      name: 'line4',
+      id: '4'
+    },
+    {
+      source: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 },
+      target: { x: -20, y: 5, z: 0 },
+      type: 'line',
+      name: 'line5',
+      id: '5'
+    },
+    {
+      source: { x: -20, y: 5, z: 0 },
+      target: { x: -20, y: 5, z: -110 },
+      type: 'line',
+      name: 'line6',
+      id: '6'
+    },
+    {
+      source: { x: -20, y: 5, z: -110 },
+      target: { x: -(128 * 4) / 2 + 5, y: 5, z: -110 },
+      type: 'line',
+      name: 'line7',
+      id: '7'
+    },
+    {
+      source: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 },
       target: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
+      type: 'line',
+      name: 'line8',
+      id: '8',
       position: { x: 0, y: 0, z: 10 },
       style: {
         color: 0xd99e39,
         linewidth: 2
       }
-    },
-    {
-      source: { x: (128 * 4) / 2 - 5, y: 5, z: 0 },
-      target: { x: (128 * 4) / 2 - 5, y: 105, z: 0 }
-    },
-    {
-      source: { x: (128 * 4) / 2 - 5, y: 105, z: 0 },
-      target: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 }
-    },
-    {
-      source: { x: -(128 * 4) / 2 + 5, y: 105, z: 0 },
-      target: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 }
-    },
-    {
-      source: { x: -(128 * 4) / 2 + 5, y: 5, z: 0 },
-      target: { x: -20, y: 5, z: 0 }
-    },
-    {
-      source: { x: -20, y: 5, z: 0 },
-      target: { x: -20, y: 5, z: -110 }
-    },
-    {
-      source: { x: -20, y: 5, z: -110 },
-      target: { x: -(128 * 4) / 2 + 5, y: 5, z: -110 }
     }
   ]
   // 添加线模型
@@ -272,6 +296,7 @@ function createLines(scope) {
       })
     }
     const curveObject = new THREE.Line(geometryLine, materialLine)
+    curveObject.name = object.name
     if (object.position != null && typeof object.position !== 'undefined') {
       curveObject.position.set(
         object.position.x,
@@ -697,8 +722,41 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
       }
     }
   }
-  cabinet.name = 'cabinet'
-  return cabinet
+  cabinet.name = c.name
+  // const group = new THREE.Group()
+  // group.add(top, bottom, back, front, left, right)
+  // group.name = c.name
+
+  // scope.scene.add(group)
+
+  // const geometryMerge = new THREE.BufferGeometry()
+  // const materialMerge = new THREE.MeshLambertMaterial({ color: 0xf33f66 })
+  // top.updateMatrix()
+  // geometryMerge.merge(top.geometry, top.matrix)
+
+  // bottom.updateMatrix()
+  // geometryMerge.merge(bottom.geometry, bottom.matrix)
+
+  // back.updateMatrix()
+  // geometryMerge.merge(back.geometry, back.matrix)
+
+  // front.updateMatrix()
+  // geometryMerge.merge(front.geometry, front.matrix)
+
+  // left.updateMatrix()
+  // geometryMerge.merge(left.geometry, left.matrix)
+
+  // right.updateMatrix()
+  // geometryMerge.merge(right.geometry, right.matrix)
+
+  // const merge = new THREE.Mesh(geometryMerge, materialMerge)
+  // merge.name = c.name
+  // merge.position.x = px
+  // merge.position.y = py
+  // merge.position.z = pz
+  // scope.scene.add(merge)
+  // console.info('scene', scope.scene)
+  // return merge
 }
 /**
  * 绘制服务器

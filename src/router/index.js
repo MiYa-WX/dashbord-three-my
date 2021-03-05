@@ -106,10 +106,16 @@ export const constantRoutes = [
       //   meta: { title: 'font', icon: 'el-icon-data-board' }
       // },
       {
-        path: 'FirstPersonControls',
-        name: 'FirstPersonControls',
-        component: () => import('@/views/threejs/FirstPersonControls'),
-        meta: { title: 'FirstPersonControls', icon: 'el-icon-data-board' }
+        path: 'twoScene',
+        name: 'TwoScene',
+        component: () => import('@/views/threejs/twoScene'),
+        meta: { title: 'twoScene', icon: 'el-icon-data-board' }
+      },
+      {
+        path: 'move',
+        name: 'Move',
+        component: () => import('@/views/threejs/move'),
+        meta: { title: 'move', icon: 'el-icon-data-board' }
       }
     ]
   },
