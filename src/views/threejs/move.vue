@@ -53,7 +53,8 @@ export default {
         // { x: -1, y: 0, z: -1 }
 
         { x: 2, y: 0, z: 1 },
-        { x: -3, y: 0, z: 1 }
+        { x: -3, y: 0, z: 1 },
+        { x: -3, y: 0, z: -1 }
       ]
 
       for (const handlePos of initialPoints) {
@@ -64,11 +65,13 @@ export default {
       const curve = new THREE.CatmullRomCurve3(
         curveHandles.map((handle) => handle)
       )
-      curve.curveType = 'centripetal'
+      curve.curveType = 'catmullrom'
       curve.closed = true
+      curve.tension = 0 // 当curveType为catmullrom时，定义catmullrom的张力
+      console.info('c', curve)
 
       const points = curve.getPoints(50)
-      const line = new THREE.LineLoop(
+      const line = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(points),
         new THREE.LineBasicMaterial({ color: 0x00ff00 })
       )

@@ -1,9 +1,9 @@
 <template>
   <div class="dashboard-container">
     <div id="threeTest">
-      <div id="selection">
+      <!-- <div id="selection">
         <div></div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -53,7 +53,7 @@ export default {
         height / 2,
         -height / 2,
         1,
-        10
+        100000
       )
       this.cameraOrtho.position.z = 10
 
@@ -62,9 +62,14 @@ export default {
 
       const geometry = new THREE.BoxGeometry(100, 200, 100)
       const material = new THREE.MeshLambertMaterial({ color: 0x6083c2 })
-
       const mesh = new THREE.Mesh(geometry, material)
-      this.scene.add(mesh)
+
+      const sphereGeometry = new THREE.SphereGeometry(60, 40, 40) // 创建一个球体几何对象
+      const materialSphere = new THREE.MeshLambertMaterial({
+        color: '#ff00ff'
+      })
+      const meshSphere = new THREE.Mesh(sphereGeometry, materialSphere) // 网格模型对象Mesh
+      this.scene.add(mesh, meshSphere)
 
       const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
       this.scene.add(ambientLight)
@@ -89,7 +94,7 @@ export default {
 
       const spriteMaterial = new THREE.SpriteMaterial({ map: this.texture })
       this.sprite = new THREE.Sprite(spriteMaterial)
-      this.sprite.scale.set(100, 300, 1)
+      this.sprite.scale.set(textureSize, textureSize, 1)
       this.sceneOrtho.add(this.sprite)
 
       this.updateSpritePosition()
@@ -153,6 +158,9 @@ export default {
       this.renderer.clear()
       if (this.camera.position.y < 550 && this.camera.position.y > 280) {
         this.camera.position.y -= 1
+        // const time = Date.now() * 0.005
+        //   const d = 5
+        //   this.camera.position.y = Math.cos(time * 0.7) - 1000
       }
       this.renderer.render(this.scene, this.camera)
       // calculate start position for copying data

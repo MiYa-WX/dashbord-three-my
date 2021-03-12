@@ -394,6 +394,7 @@ function createWall(scope) {
   const material = new THREE.MeshBasicMaterial({
     map: wallTexture,
     side: THREE.DoubleSide
+    // color: 0xffffff
   })
 
   const geometryAB = new THREE.BoxBufferGeometry(2, 100, 128 * 3)
@@ -448,7 +449,7 @@ function createDoor(scope) {
     const doorgeometry = new THREE.BoxGeometry(2, 80, 34)
     const door = new THREE.Mesh(doorgeometry, doormaterial)
     door.position.set(0, 80 / 2, (128 * 3) / 2)
-    door.rotation.y += 1.5 * Math.PI
+    door.rotation.y = 0.5 * Math.PI
     door.name = '房门'
     door.open = false
     door.toggle = (o) => {
@@ -456,7 +457,7 @@ function createDoor(scope) {
         new TWEEN.Tween(o.rotation)
           .to(
             {
-              y: o.rotation.y + (Math.PI * 3) / 5
+              y: Math.PI * 1
             },
             1000
           )
@@ -466,7 +467,7 @@ function createDoor(scope) {
         new TWEEN.Tween(o.position)
           .to(
             {
-              x: 34 / 2 + 5,
+              x: 34 / 2,
               z: (128 * 3) / 2 + 34 / 2
             },
             1000
@@ -479,7 +480,7 @@ function createDoor(scope) {
         new TWEEN.Tween(o.rotation)
           .to(
             {
-              y: o.rotation.y - (Math.PI * 3) / 5
+              y: 0.5 * Math.PI
             },
             1000
           )
@@ -642,7 +643,7 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
       new TWEEN.Tween(o.rotation)
         .to(
           {
-            y: o.rotation.y + (Math.PI * 3) / 5
+            y: Math.PI * 0.5
           },
           1000
         )
@@ -652,7 +653,7 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
       new TWEEN.Tween(o.position)
         .to(
           {
-            x: o.position.x + w / 2 + 3,
+            x: o.position.x + (w / 2) * (1 - Math.cos(Math.PI * 0.5)),
             z: o.position.z + d / 2
           },
           1000
@@ -664,16 +665,17 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
       new TWEEN.Tween(o.rotation)
         .to(
           {
-            y: o.rotation.y - (Math.PI * 3) / 5
+            y: 0
           },
           1000
         )
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start()
+
       new TWEEN.Tween(o.position)
         .to(
           {
-            x: o.position.x - w / 2 - 3,
+            x: o.position.x - (w / 2) * (1 - Math.cos(Math.PI * 0.5)),
             z: o.position.z - d / 2
           },
           1000

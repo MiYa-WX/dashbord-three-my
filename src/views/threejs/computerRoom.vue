@@ -35,6 +35,7 @@
       :close-on-click-modal="false"
     >
       <video
+        ref="media"
         class="video-wrapper"
         src="https://vjs.zencdn.net/v/oceans.mp4"
         controls="controls"
@@ -108,6 +109,8 @@ export default {
     // 一些辅助对象
     this.createHelperObject(true, false)
 
+    this.walkAuto()
+
     // 绘制地板
     createFloor(this)
     // 绘制墙壁
@@ -145,14 +148,15 @@ export default {
     }
     this.render()
 
-    this.roomDom.addEventListener('click', this.onClick, false)
-    this.roomDom.addEventListener('dbclick', this.onClick, false)
+    // this.roomDom.addEventListener('click', this.onClick, false)
+    // this.roomDom.addEventListener('dbclick', this.dbClick, false)
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
     this.roomDom.removeEventListener('click', this.onClick, false)
-    this.roomDom.removeEventListener('dbclick', this.onClick, false)
+    this.roomDom.removeEventListener('dbclick', this.dbClick, false)
     window.removeEventListener('resize', this.onWindowResize, false)
+    this.renderer.forceContextLoss()
     cancelAnimationFrame(this.myReqAnima)
     clearTimeout(this.clickFlag)
 
@@ -164,15 +168,19 @@ export default {
     this.stats = null
     this.labelRenderer = null
 
-    // const gl = this.renderer.domElement.getContext('webgl')
-    // gl && gl.getExtension('WEBGL_lose_context').loseContext()
+    const gl = this.renderer.domElement.getContext('webgl')
+    gl && gl.getExtension('WEBGL_lose_context').loseContext()
   },
   methods: {
     handleDialogClose() {
       this.dialogVisible = false
+      // 弹框关闭后，暂停播放视频
+      const mediaRef = this.$refs.media
+      mediaRef.pause()
     },
     handleDialogOpen(cameraName) {
       this.dialogVisible = true
+      // 弹框上展示摄像机的名字
       this.cameraName = cameraName
     },
     /**
@@ -194,6 +202,21 @@ export default {
       this.stats = this.isStats ? this.initStats() : null
       this.mouse = new THREE.Vector2()
     },
+    updateSpritePosition() {
+      const dpr = window.devicePixelRatio
+
+      const textureSize = 128 * dpr
+      const halfWidth = this.areaWidth / 2
+      const halfHeight = this.areaHeight / 2
+
+      const halfImageWidth = textureSize / 2
+      const halfImageHeight = textureSize / 2
+      this.sprite.position.set(
+        halfWidth - halfImageWidth,
+        -halfHeight + halfImageHeight,
+        1
+      )
+    },
     /**
      * 创建渲染器,并设置渲染器的相关参数
      */
@@ -206,14 +229,13 @@ export default {
       // 设置渲染器大小
       this.renderer.setSize(this.areaWidth, this.areaHeight)
       // 兼容高清屏幕
-      // this.renderer.setPixelRatio(window.devicePixelRatio)
+      this.renderer.setPixelRatio(window.devicePixelRatio)
       // 将渲染器的DOM元素(this.renderer.domElement)添加到roomDom元素中
       this.roomDom.appendChild(this.renderer.domElement)
       // 设置颜色和透明度
       this.renderer.setClearColor(0x1f2d3d, 1)
       this.renderer.shadowMap.enabled = true //
       this.renderer.shadowMapSoft = true
-
       this.labelRenderer = new CSS2DRenderer()
       this.labelRenderer.setSize(this.areaWidth, this.areaHeight)
       this.labelRenderer.domElement.style.position = 'absolute'
@@ -222,13 +244,7 @@ export default {
 
       // 绑定事件
       this.roomDom.addEventListener('click', this.onClick, false)
-      this.roomDom.addEventListener(
-        'dbclick',
-        () => {
-          clearTimeout(this.clickFlag)
-        },
-        false
-      )
+      this.roomDom.addEventListener('dbclick', this.dbClick, false)
     },
     /**
      * 创建相机,并设置相机的相关参数
@@ -340,6 +356,7 @@ export default {
       this.controls.lookVertical = false // 是否可以垂直环顾四周
       this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
       this.controls.movementSpeed = 100 // 相机移动速度
+      this.controls.autoForward = false
       this.controls.noFly = false
       this.controls.constrainVertical = false // 约束垂直
       this.controls.verticalMin = 1.0
@@ -446,7 +463,7 @@ export default {
     },
     handleAutoCheck() {
       this.isShowAuto = !this.isShowAuto
-      const curObject = this.scene.getObjectByName('1-1号服务器')
+      const curObject = this.scene.getObjectByName('1-2号服务器')
       // const curObjectFront = curObject.getObjectByName('front')
 
       if (this.isShowAuto) {
@@ -464,23 +481,41 @@ export default {
           .easing(TWEEN.Easing.Quadratic.InOut)
           .onUpdate(() => {
             this.camera.lookAt(curObject.position)
-            let cameraOrtho = null
-            let sceneOrtho = null
-            cameraOrtho = new THREE.OrthographicCamera(
+
+            this.cameraOrtho = null
+            this.sceneOrtho = null
+            this.cameraOrtho = new THREE.OrthographicCamera(
               -this.areaWidth / 2,
               this.areaWidth / 2,
               this.areaHeight / 2,
               -this.areaHeight / 2,
               1,
-              1000
+              100000
             )
-            cameraOrtho.position.z = 10
+            this.cameraOrtho.position.z = 10
 
-            sceneOrtho = new THREE.Scene()
-            // const spriteMaterial = new THREE.SpriteMaterial({ color: 0xffffff })
-            // const sprite = new THREE.Sprite(spriteMaterial)
-            // sceneOrtho.add(sprite)
-            this.renderAuto(sceneOrtho, cameraOrtho)
+            this.sceneOrtho = new THREE.Scene()
+            this.dpr = window.devicePixelRatio
+            this.vector = new THREE.Vector2()
+            this.textureSize = 128 * this.dpr
+            const data = new Uint8Array(this.textureSize * this.textureSize * 3)
+            this.texture = new THREE.DataTexture(
+              data,
+              this.textureSize,
+              this.textureSize,
+              THREE.RGBFormat
+            )
+            this.texture.minFilter = THREE.NearestFilter
+            this.texture.magFilter = THREE.NearestFilter
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+              map: this.texture
+            })
+
+            this.sprite = new THREE.Sprite(spriteMaterial)
+            this.sprite.scale.set(this.textureSize, this.textureSize, 1)
+            this.sceneOrtho.add(this.sprite)
+            this.updateSpritePosition()
           })
           .start()
       } else {
@@ -492,23 +527,155 @@ export default {
      */
     render() {
       TWEEN.update()
+
       this.isFirstPerson && this.controls.update(this.clock.getDelta())
       this.stats && this.stats.update()
 
       // 实时渲染
       this.myReqAnima = requestAnimationFrame(this.render)
+      this.updateAuto()
+      this.renderer.autoClear = false
+      this.renderer.clear()
       this.renderer.render(this.scene, this.camera)
       this.labelRenderer.render(this.scene, this.camera)
+      this.renderAuto()
     },
-    renderAuto(scene, camera) {
-      requestAnimationFrame(() => {
-        if (this.camera.position.y < 120) {
-          this.camera.position.y += 0.001
-        }
-        this.renderAuto(scene, camera)
-        this.renderer.clearDepth()
-        this.renderer.render(scene, camera)
+    walkAuto() {
+      const geometryP = new THREE.SphereGeometry(10, 32, 32)
+      const materialP = new THREE.MeshBasicMaterial({
+        color: 0x409eff
       })
+      this.circleP = new THREE.Mesh(geometryP, materialP)
+      this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
+      this.scene.add(this.circleP)
+
+      // 轨迹线
+      const curve = new THREE.CatmullRomCurve3(
+        [
+          new THREE.Vector3(0, 5, (128 * 3) / 2 + 20),
+          new THREE.Vector3(-10, 5, 50),
+          new THREE.Vector3(-150, 5, 50)
+        ],
+        false // 是否闭合
+      )
+      this.points = curve.getPoints(500)
+      const material = new THREE.LineBasicMaterial({
+        color: 0xff0000
+      })
+      this.pointsBuf = [
+        // 10,0,0,
+        // 0,0,10,
+      ]
+      const geometryLine = new THREE.BufferGeometry().setFromPoints(this.points)
+      this.lineObject = new THREE.Line(geometryLine, material)
+      this.scene.add(this.lineObject)
+      // // 定义线的基本材料，我们可以使用LineBasicMaterial（实线材料）和LineDashedMaterial（虚线材料）
+      // const material = new THREE.LineBasicMaterial({
+      //   color: 0xff0000
+      // })
+      // // 设置具有几何顶点的几何（Geometry）或缓冲区几何（BufferGeometry）设置顶点位置，看名字就知道了，一个是直接将数据保存在js里面的，另一个是保存在WebGL缓冲区内的，而且肯定保存到WebGL缓冲区内的效率更高
+      // const geometry = new THREE.BufferGeometry()
+
+      // geometry.vertices = [
+      //   new THREE.Vector3(0, 5, (128 * 3) / 2 + 20),
+      //   new THREE.Vector3(0, 5, 50),
+      //   new THREE.Vector3(-150, 5, 50)
+      // ]
+      // // 使用Line方法将线初始化
+      // const line = new THREE.Line(geometry, material)
+      // // 将线添加到场景
+      // this.scene.add(line)
+
+      const duration = 101
+      // 声明一个数组用于存储时间序列
+      const arr = []
+      for (let i = 0; i < duration; i++) {
+        arr.push(i)
+      }
+      // 生成一个时间序列
+      const times = new Float32Array(arr)
+
+      const posArr = []
+      this.points.forEach((elem) => {
+        posArr.push(elem.x, elem.y, elem.z)
+      })
+      // 创建一个和时间序列相对应的位置坐标系列
+      const values = new Float32Array(posArr)
+      // 创建一个帧动画的关键帧数据，曲线上的位置序列对应一个时间序列
+      const posTrack = new THREE.KeyframeTrack(
+        'circleP.position',
+        times,
+        values
+      )
+      const clip = new THREE.AnimationClip('default', duration, [posTrack])
+      this.mixer = new THREE.AnimationMixer(this.circleP)
+      const AnimationAction = this.mixer.clipAction(clip)
+      AnimationAction.timeScale = 20
+      // AnimationAction.play()
+
+      this.clock11 = new THREE.Clock() // 声明一个时钟对象
+    },
+    updateAuto() {
+      const time = Date.now()
+      const looptime = 20 * 1000
+      const t = (time % looptime) / looptime
+      // debugger
+      // this.lineObject.geometry.attributes.position
+
+      // this.points.getPointAt(
+      //   (t + 30 / this.lineObject.geometry.attributes.position.length) % 1
+      // )
+      // this.circleP.position.set(this.points)
+      // this.circleP.lookAt(this.lineObject.position)
+      // const elapsed = this.clock11.getElapsedTime()
+
+      //   const time = Date.now() * 0.0005
+      //   const d = 20
+      //   // this.camera.position.y = 100 + Math.cos(time) * d
+
+      // this.circleP.position.z = (128 * 3) / 2 + 20 + Math.cos(time) * d
+
+      // if (this.circleP.position.z === 20) {
+      //   console.info(11111111111111111111111111)
+      //   this.circleP.position.x += 0.5
+      // }
+      // this.pointsBuf.push(
+      //   this.points[_i].x,
+      //   this.points[_i].y,
+      //   this.points[_i].z
+      // )
+      // _vertices = new Float32Array(this.pointsBuf)
+      // _geometry.addAttribute(
+      //   'position',
+      //   new THREE.BufferAttribute(_vertices, 3)
+      // )
+      // renwu.position.set(
+      //   this.points[_i].x,
+      //   this.points[_i].y,
+      //   this.points[_i].z
+      // )
+      // renwu.lookAt(
+      //   this.points[_i + 1].x,
+      //   this.points[_i + 1].y,
+      //   this.points[_i + 1].z
+      // )
+      // 更新帧动画的时间
+      this.mixer.update(this.clock11.getDelta())
+    },
+    renderAuto() {
+      if (this.isShowAuto) {
+        const time = Date.now() * 0.0005
+        const d = 20
+        this.camera.position.y = 100 + Math.cos(time) * d
+        this.vector.x = (this.areaWidth * this.dpr) / 2 - this.textureSize / 2
+        this.vector.y = (this.areaHeight * this.dpr) / 2 - this.textureSize / 2
+
+        // 将当前WebGLFramebuffer中的像素复制到2D纹理中
+        this.renderer.copyFramebufferToTexture(this.vector, this.texture)
+
+        this.renderer.clearDepth()
+        this.renderer.render(this.sceneOrtho, this.cameraOrtho)
+      }
     },
     // 初始化性能插件
     initStats() {
@@ -539,37 +706,26 @@ export default {
      * 点击事件
      */
     onClick(event) {
+      console.info('onClick')
       clearTimeout(this.clickFlag)
       this.clickFlag = setTimeout(() => {
         event.preventDefault()
+        const x = event.clientX
+        const y = event.clientY
+        // 返回元素的大小及其相对于视口的位置
+        const roomRect = this.roomDom.getBoundingClientRect()
+        // 屏幕坐标转标准设备坐标
+        this.mouse.x = ((x - roomRect.left) / this.roomDom.offsetWidth) * 2 - 1 // 标准设备横坐标
+        this.mouse.y = -((y - roomRect.top) / this.roomDom.offsetHeight) * 2 + 1 // 标准设备纵坐标
 
-        console.log('event.clientX:' + event.clientX)
-        console.log('event.clientY:' + event.clientY)
-        const x = event.clientX - 210
-        const y = event.clientY - 60
-
-        // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
-        // mouse.x = (x / this.areaWidth) * 2 - 1
-        // mouse.y = -(y / this.areaHeight) * 2 + 1
-        this.mouse.x =
-          ((event.clientX - this.roomDom.getBoundingClientRect().left) /
-            this.roomDom.offsetWidth) *
-            2 -
-          1
-        this.mouse.y =
-          -(
-            (event.clientY - this.roomDom.getBoundingClientRect().top) /
-            this.roomDom.offsetHeight
-          ) *
-            2 +
-          1
         const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 1)
-        vector.unproject(this.camera)
-        const raycaster = new THREE.Raycaster(
-          this.camera.position,
-          vector.sub(this.camera.position).normalize()
-        )
-
+        // 标准设备坐标转世界坐标
+        const worldVector = vector.unproject(this.camera)
+        // 射线投射方向单位向量(worldVector坐标减相机位置坐标)
+        const ray = worldVector.sub(this.camera.position).normalize()
+        // 创建射线投射器对象
+        const raycaster = new THREE.Raycaster(this.camera.position, ray)
+        // 返回射线选中的对象
         const intersects = raycaster.intersectObjects(this.scene.children)
         const tooltipDom = document.getElementById('tooltip')
         if (intersects.length === 0) {
@@ -590,28 +746,13 @@ export default {
           if (!selectObject.open) {
             tooltipDom.style.display = 'block' // 显示说明性标签
             // 修改标签的位置
-            tooltipDom.style.left = x + 50 + 'px'
-            tooltipDom.style.top = y - 30 + 'px'
+            tooltipDom.style.left = x - roomRect.x + 50 + 'px' // roomRect.x是元素的原点横坐标
+            tooltipDom.style.top = y - roomRect.y - 30 + 'px' // roomRect.y是元素的原点纵坐标
             tooltipDom.innerHTML =
               selectObject.name +
               '<br/>' +
               '运行' +
               (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
-            // if (selectObject.info.deviceStatus) {
-            //   new TWEEN.Tween(this.camera.position)
-            //     .to(
-            //       {
-            //         x: (this.camera.position.x + selectObject.position.x) / 2,
-            //         y: 200,
-            //         z: (this.camera.position.z + selectObject.position.z) / 2
-            //       },
-            //       1000
-            //     )
-            //     .easing(TWEEN.Easing.Quadratic.InOut)
-            //     .start()
-
-            //   this.camera.updateProjectionMatrix()
-            // }
           } else {
             tooltipDom.style.display = 'none' // 隐藏说明性标签
           }
@@ -620,6 +761,14 @@ export default {
           selectObject.toggle(selectObject)
         }
       }, 250)
+    },
+    /**
+     * 双击事件
+     */
+    dbClick(event) {
+      event.preventDefault()
+      console.info('dbClick')
+      clearTimeout(this.clickFlag)
     }
   }
 }

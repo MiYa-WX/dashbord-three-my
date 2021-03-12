@@ -114,7 +114,7 @@ export const constantRoutes = [
       {
         path: 'move',
         name: 'Move',
-        component: () => import('@/views/threejs/move'),
+        component: () => import('@/views/threejs/move1'),
         meta: { title: 'move', icon: 'el-icon-data-board' }
       }
     ]
