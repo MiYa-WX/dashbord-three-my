@@ -55,6 +55,8 @@ import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonCont
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { objectModel, btnsConfig } from '@/utils/modelData'
+// 引入加载器，用于glTF格式的的模型添加
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import {
   createBox,
   createCylinder,
@@ -79,7 +81,9 @@ export default {
       isFirstPerson: false, // 是否开启第一人称漫游
       isStats: true, // 是否开启性能检测控件
       isShowLines: false, // 是否开启走线管理
-      isShowAuto: false // 是否开启自动路径巡检
+      isShowAuto: false, // 是否开启自动路径巡检
+      isPathAuto: false,
+      pos: 0 // 用于控制路径巡检时的坐标偏移量
     }
   },
   computed: {
@@ -108,8 +112,6 @@ export default {
 
     // 一些辅助对象
     this.createHelperObject(true, false)
-
-    this.walkAuto()
 
     // 绘制地板
     createFloor(this)
@@ -402,10 +404,13 @@ export default {
             this.stats = null
           }
           break
+        case 'btnAuto':
+          this.handleAutoPath()
+          break
         case 'btnFirstPerson':
           this.handleFirstPerson()
           break
-        case 'btnAuto':
+        case 'btnCabinet':
           this.handleAutoCheck()
           break
         case 'btnConnection':
@@ -450,6 +455,30 @@ export default {
       this.camera.updateProjectionMatrix()
       this.controls.reset()
       this.controls.update()
+    },
+    handleAutoPath() {
+      this.isPathAuto = !this.isPathAuto
+      if (this.isPathAuto) {
+        this.walkAuto()
+      } else {
+        // this.circleP.geometry.dispose()
+        // this.circleP.material.dispose()
+
+        this.circleP.traverse(function(obj) {
+          if (obj.type === 'Mesh') {
+            obj.geometry.dispose()
+            obj.material.dispose()
+          }
+        })
+
+        let pathLine = this.scene.getObjectByName('巡检路径')
+        pathLine.geometry.dispose()
+        pathLine.material.dispose()
+        this.scene.remove(this.circleP, pathLine)
+        this.circleP = null
+        pathLine = null
+        this.pos = 0
+      }
     },
     handleFirstPerson() {
       this.isFirstPerson = !this.isFirstPerson
@@ -533,7 +562,9 @@ export default {
 
       // 实时渲染
       this.myReqAnima = requestAnimationFrame(this.render)
-      this.updateAuto()
+      if (this.isPathAuto && this.circleP) {
+        this.updateAuto()
+      }
       this.renderer.autoClear = false
       this.renderer.clear()
       this.renderer.render(this.scene, this.camera)
@@ -541,126 +572,92 @@ export default {
       this.renderAuto()
     },
     walkAuto() {
-      const geometryP = new THREE.SphereGeometry(10, 32, 32)
-      const materialP = new THREE.MeshBasicMaterial({
-        color: 0x409eff
+      // const geometryP = new THREE.SphereGeometry(10, 32, 32)
+      // const materialP = new THREE.MeshBasicMaterial({
+      //   color: 0x409eff
+      // })
+      // this.circleP = new THREE.Mesh(geometryP, materialP)
+      // this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
+      // this.scene.add(this.circleP)
+
+      const loader = new GLTFLoader()
+
+      loader.load('/models//RobotExpressive.glb', (gltf) => {
+        const model = gltf.scene
+        model.scale.set(10, 10, 10)
+        model.rotation.y = Math.PI
+        this.mixer = new THREE.AnimationMixer(model)
+        const action = this.mixer.clipAction(gltf.animations[10])
+        action.play()
+        this.circleP = model
+        this.scene.add(this.circleP)
       })
-      this.circleP = new THREE.Mesh(geometryP, materialP)
-      this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
-      this.scene.add(this.circleP)
 
       // 轨迹线
-      const curve = new THREE.CatmullRomCurve3(
-        [
-          new THREE.Vector3(0, 5, (128 * 3) / 2 + 20),
-          new THREE.Vector3(-10, 5, 50),
-          new THREE.Vector3(-150, 5, 50)
-        ],
+      const path = [
+        new THREE.Vector3(0, 5, (128 * 3) / 2 - 20),
+        new THREE.Vector3(-10, 5, 50),
+        new THREE.Vector3(-150, 5, 50)
+      ]
+
+      this.curve = new THREE.CatmullRomCurve3(
+        path,
         false // 是否闭合
       )
-      this.points = curve.getPoints(500)
+      const points = this.curve.getPoints(1000)
+      // 定义线的基本材料，我们可以使用LineBasicMaterial（实线材料）和LineDashedMaterial（虚线材料）
       const material = new THREE.LineBasicMaterial({
         color: 0xff0000
       })
-      this.pointsBuf = [
-        // 10,0,0,
-        // 0,0,10,
-      ]
-      const geometryLine = new THREE.BufferGeometry().setFromPoints(this.points)
-      this.lineObject = new THREE.Line(geometryLine, material)
-      this.scene.add(this.lineObject)
-      // // 定义线的基本材料，我们可以使用LineBasicMaterial（实线材料）和LineDashedMaterial（虚线材料）
-      // const material = new THREE.LineBasicMaterial({
-      //   color: 0xff0000
-      // })
-      // // 设置具有几何顶点的几何（Geometry）或缓冲区几何（BufferGeometry）设置顶点位置，看名字就知道了，一个是直接将数据保存在js里面的，另一个是保存在WebGL缓冲区内的，而且肯定保存到WebGL缓冲区内的效率更高
-      // const geometry = new THREE.BufferGeometry()
 
-      // geometry.vertices = [
-      //   new THREE.Vector3(0, 5, (128 * 3) / 2 + 20),
-      //   new THREE.Vector3(0, 5, 50),
-      //   new THREE.Vector3(-150, 5, 50)
-      // ]
-      // // 使用Line方法将线初始化
-      // const line = new THREE.Line(geometry, material)
-      // // 将线添加到场景
-      // this.scene.add(line)
+      /** 设置具有几何顶点的几何（Geometry）或缓冲区几何（BufferGeometry）设置顶点位置，
+       * 看名字就知道了，一个是直接将数据保存在js里面的，另一个是保存在WebGL缓冲区内的，而且肯定保存到WebGL缓冲区内的效率更高
+       */
+      const geometryLine = new THREE.BufferGeometry()
+      // 将线条展示出来
+      geometryLine.setFromPoints(points) // 通过点队列设置该 BufferGeometry 的 attribute。
 
-      const duration = 101
-      // 声明一个数组用于存储时间序列
-      const arr = []
-      for (let i = 0; i < duration; i++) {
-        arr.push(i)
-      }
-      // 生成一个时间序列
-      const times = new Float32Array(arr)
-
-      const posArr = []
-      this.points.forEach((elem) => {
-        posArr.push(elem.x, elem.y, elem.z)
-      })
-      // 创建一个和时间序列相对应的位置坐标系列
-      const values = new Float32Array(posArr)
-      // 创建一个帧动画的关键帧数据，曲线上的位置序列对应一个时间序列
-      const posTrack = new THREE.KeyframeTrack(
-        'circleP.position',
-        times,
-        values
-      )
-      const clip = new THREE.AnimationClip('default', duration, [posTrack])
-      this.mixer = new THREE.AnimationMixer(this.circleP)
-      const AnimationAction = this.mixer.clipAction(clip)
-      AnimationAction.timeScale = 20
-      // AnimationAction.play()
-
-      this.clock11 = new THREE.Clock() // 声明一个时钟对象
+      geometryLine.vertices = path
+      // 使用Line方法将线初始化
+      const lineObject = new THREE.Line(geometryLine, material)
+      lineObject.name = '巡检路径'
+      // 将线添加到场景
+      this.scene.add(lineObject)
     },
     updateAuto() {
-      const time = Date.now()
-      const looptime = 20 * 1000
-      const t = (time % looptime) / looptime
-      // debugger
-      // this.lineObject.geometry.attributes.position
+      if (this.pos < 1) {
+        // const points = this.curve.getPointAt(this.pos)
+        // this.circleP.position.copy(points) // 模型移动
 
-      // this.points.getPointAt(
-      //   (t + 30 / this.lineObject.geometry.attributes.position.length) % 1
-      // )
-      // this.circleP.position.set(this.points)
-      // this.circleP.lookAt(this.lineObject.position)
-      // const elapsed = this.clock11.getElapsedTime()
+        const point = this.curve.getPoint(this.pos)
+        // 模型的偏移量
+        const offsetAngle = Math.PI
+        // 创建一个4维矩阵
+        const mtx = new THREE.Matrix4()
+        mtx.lookAt(this.circleP.position.clone(), point, this.circleP.up)
+        mtx.multiply(
+          new THREE.Matrix4().makeRotationFromEuler(
+            new THREE.Euler(0, offsetAngle, 0)
+          )
+        )
+        // 计算出需要进行旋转的四元数值
+        const toRot = new THREE.Quaternion().setFromRotationMatrix(mtx)
+        // 根据以上值调整角度
+        this.circleP.quaternion.slerp(toRot, 0.2)
+        this.circleP.position.set(point.x, point.y, point.z)
 
-      //   const time = Date.now() * 0.0005
-      //   const d = 20
-      //   // this.camera.position.y = 100 + Math.cos(time) * d
-
-      // this.circleP.position.z = (128 * 3) / 2 + 20 + Math.cos(time) * d
-
-      // if (this.circleP.position.z === 20) {
-      //   console.info(11111111111111111111111111)
-      //   this.circleP.position.x += 0.5
-      // }
-      // this.pointsBuf.push(
-      //   this.points[_i].x,
-      //   this.points[_i].y,
-      //   this.points[_i].z
-      // )
-      // _vertices = new Float32Array(this.pointsBuf)
-      // _geometry.addAttribute(
-      //   'position',
-      //   new THREE.BufferAttribute(_vertices, 3)
-      // )
-      // renwu.position.set(
-      //   this.points[_i].x,
-      //   this.points[_i].y,
-      //   this.points[_i].z
-      // )
-      // renwu.lookAt(
-      //   this.points[_i + 1].x,
-      //   this.points[_i + 1].y,
-      //   this.points[_i + 1].z
-      // )
-      // 更新帧动画的时间
-      this.mixer.update(this.clock11.getDelta())
+        // 在轨迹线上移动的摄像头朝向
+        this.camera.lookAt(this.circleP.position)
+        // todo 摄像头模型的视角获取
+        this.pos += 0.001
+      } else {
+        // 回到最初的位置就不要动啦
+        if (this.pos > 1) {
+          return
+        } else {
+          this.pos = 0
+        }
+      }
     },
     renderAuto() {
       if (this.isShowAuto) {

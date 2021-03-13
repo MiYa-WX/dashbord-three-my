@@ -799,13 +799,21 @@ export const btnsConfig = [
     event: () => {}
   },
   {
+    btnId: 'btnAuto',
+    btnTitle: '路线巡检',
+    btnIcon: 'el-icon-s-unfold',
+    event: function() {
+      console.info('qqq')
+    }
+  },
+  {
     btnId: 'btnFirstPerson',
     btnTitle: '第一人称巡检',
     btnIcon: 'el-icon-map-location',
     event: () => {}
   },
   {
-    btnId: 'btnAuto',
+    btnId: 'btnCabinet',
     btnTitle: '机柜巡检',
     btnIcon: 'el-icon-thumb',
     event: function() {
