@@ -430,7 +430,8 @@ function createWall(scope) {
   dongMesh.name = '门洞'
   const objectsCube = []
   objectsCube.push(dongMesh)
-  createResultBsp(scope, wallMeshLeft, objectsCube, material)
+  const dong = createResultBsp(scope, wallMeshLeft, objectsCube, material)
+  scope.scene.add(dong)
 }
 /**
  * 绘制房门
@@ -508,31 +509,94 @@ function createDoor(scope) {
  * 绘制机柜
  */
 function createCabinet(scope, w, h, d, px, py, pz, c) {
-  // const materialCabinet = new THREE.MeshPhongMaterial({ color: 0x42474c })
+  // const floorThick = 4 / 2
+  // // 大盒子
+  // const geometryBig = new THREE.BoxGeometry(w, h, w)
+  // const meterialBig = new THREE.MeshBasicMaterial({
+  //   color: 0x999999,
+  //   opacity: 0.9,
+  //   transparent: true
+  // })
 
-  // const geometryCabinet = new THREE.BoxBufferGeometry(60, 150, 30)
-  // const meshCabinet = new THREE.Mesh(geometryCabinet, materialCabinet)
+  // // 小盒子
+  // const geometrySmall = new THREE.BoxGeometry(w - 2, h - 2, w - 2)
+  // const meterialSmall = new THREE.MeshBasicMaterial({
+  //   color: 0x222222
+  // })
 
-  // const cabientGroup = new THREE.Group()
-  // cabientGroup.add(meshCabinet)
+  // const boxBig = new THREE.Mesh(geometryBig, meterialBig)
+  // boxBig.position.y = h / 2 + floorThick
 
-  // cabientGroup.position.set(50, 75, 200)
-  // cabientGroup.name = '机柜1'
+  // const boxSmall = new THREE.Mesh(geometrySmall, meterialSmall)
+  // boxSmall.position.z -= 2
+  // boxSmall.position.y = (h - 2) / 2 + floorThick
 
-  // const cabientGroupClone = cabientGroup.clone()
-  // cabientGroupClone.position.set(-120, 75, 200)
-  // cabientGroupClone.rotation.y += 1.5 * Math.PI
-  // cabientGroupClone.name = '机柜2'
+  // const objectsCube = []
+  // objectsCube.push(boxSmall)
+  // const dong = createResultBsp(scope, boxBig, objectsCube, meterialSmall)
+  // dong.rotation.y -= 1 * Math.PI
 
-  // const cabientGroupClone1 = cabientGroupClone.clone()
-  // cabientGroupClone1.position.set(-120, 75, 120)
-  // cabientGroupClone1.name = '机柜3'
+  // dong.position.x = px
+  // dong.position.z = pz
+  // dong.position.y = py + h / 2 + floorThick
+  // scope.scene.add(dong)
 
-  // scope.scene.add(cabientGroup, cabientGroupClone, cabientGroupClone1)
+  // const cabinetThick = 2
+  // const textureLoader = new THREE.TextureLoader()
+  // const menGeo = new THREE.BoxGeometry(w, h, cabinetThick) // 机箱门宽，高，厚
+  // const mMaterials = []
+  // mMaterials.push(
+  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
+  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
+  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
+  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
+  //   new THREE.MeshLambertMaterial({
+  //     map: textureLoader.load('/source/textures/computer/rack_front_door.jpg'),
+  //     overdraw: true
+  //   }),
+  //   new THREE.MeshBasicMaterial({
+  //     map: textureLoader.load('/source/textures/computer/rack_door_back.jpg'),
+  //     overdraw: true
+  //   })
+  // )
+
+  // const menMat = new THREE.MeshFaceMaterial(meterialBig)
+  // const front = new THREE.Mesh(menGeo, menMat)
+  // front.name = 'men'
+  // front.position.x = px
+  // front.position.z = pz + w / 2 + cabinetThick / 2
+  // front.position.y = py + h / 2 + floorThick
+  // scope.scene.add(front)
+
+  /**
+   * const materialCabinet = new THREE.MeshPhongMaterial({ color: 0x42474c })
+
+  const geometryCabinet = new THREE.BoxBufferGeometry(60, 150, 30)
+  const meshCabinet = new THREE.Mesh(geometryCabinet, materialCabinet)
+
+  const cabientGroup = new THREE.Group()
+  cabientGroup.add(meshCabinet)
+
+  cabientGroup.position.set(50, 75, 200)
+  cabientGroup.name = '机柜1'
+
+  const cabientGroupClone = cabientGroup.clone()
+  cabientGroupClone.position.set(-120, 75, 200)
+  cabientGroupClone.rotation.y += 1.5 * Math.PI
+  cabientGroupClone.name = '机柜2'
+
+  const cabientGroupClone1 = cabientGroupClone.clone()
+  cabientGroupClone1.position.set(-120, 75, 120)
+  cabientGroupClone1.name = '机柜3'
+
+  scope.scene.add(cabientGroup, cabientGroupClone, cabientGroupClone1)
+  */
   const cabinet = {}
 
+  const cabinetThick = 2
+  const floorThick = 4 / 2 + 1
   // 机柜的后
-  const geometry = new THREE.BoxBufferGeometry(w, h, 2)
+  const geometry = new THREE.BoxBufferGeometry(w, h, cabinetThick)
   const meterial = new THREE.MeshBasicMaterial({
     color: 0x777777,
     opacity: 0.2,
@@ -542,8 +606,8 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
   const back = new THREE.Mesh(geometry, meterial)
 
   back.position.x = px
-  back.position.y = py + h / 2 + 1
-  back.position.z = pz - d / 2 + 2
+  back.position.y = py + h / 2 + floorThick
+  back.position.z = pz - d / 2 - cabinetThick
 
   back.container = cabinet
   back.name = 'back'
@@ -561,14 +625,14 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
   const left = new THREE.Mesh(geometry, meterial1)
   const right = new THREE.Mesh(geometry, meterial1)
 
-  left.position.x = px + w / 2 - 1
-  left.position.y = py + h / 2 + 1
+  left.position.x = px + w / 2 - cabinetThick
+  left.position.y = py + h / 2 + floorThick
   left.position.z = pz
   left.rotation.y = Math.PI / 2
   left.name = 'left'
 
-  right.position.x = px - w / 2 + 1
-  right.position.y = py + h / 2 + 1
+  right.position.x = px - w / 2 + cabinetThick
+  right.position.y = py + h / 2 + floorThick
   right.position.z = pz
   right.rotation.y = -Math.PI / 2
   right.name = 'right'
@@ -606,12 +670,12 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
   const bottom = new THREE.Mesh(geometry2, meterial2)
 
   top.position.x = px
-  top.position.y = py + h + 2
+  top.position.y = py + h + floorThick
   top.position.z = pz
   top.name = 'top'
 
   bottom.position.x = px
-  bottom.position.y = py + 2
+  bottom.position.y = py + floorThick
   bottom.position.z = pz
   bottom.name = 'bottom'
 
@@ -634,7 +698,7 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
   const front = new THREE.Mesh(geometry3, meterial3)
 
   front.position.x = px
-  front.position.y = py + h / 2 + 1
+  front.position.y = py + h / 2 + floorThick
   front.position.z = pz + d / 2
   front.name = 'front'
   front.open = false
@@ -684,47 +748,48 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
         .start()
 
       front.open = false
-      // 关闭机柜门时，将机柜中的服务器收起
-      for (var i = 0; i < o.container.servers.length; i++) {
-        o.container.servers[i].toggle(o.container.servers[i], false)
-      }
+      // // 关闭机柜门时，将机柜中的服务器收起
+      // for (var i = 0; i < o.container.servers.length; i++) {
+      //   o.container.servers[i].toggle(o.container.servers[i], false)
+      // }
     }
   }
   front.container = cabinet
   scope.scene.add(front)
 
   cabinet.front = front
-  cabinet.servers = []
-  if (c && c.servers) {
-    cabinet.info = c
-    for (let i = 0; i < c.servers.length; i++) {
-      const server = createServer(
-        scope,
-        w - 4,
-        15,
-        d - 4,
-        px,
-        i === 0 ? 10 : py + 20 * (i + 1),
-        pz + 2,
-        c.servers[i]
-      ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
-      server.container = cabinet
-      server.info = c.servers[i]
-      cabinet.servers.push(server)
-      /**
-       * 服务器异常时的处理逻辑
-       * 1.机柜门打开
-       * 2.服务器标红
-       * 3.机柜顶部显示异常图标
-       */
-      if (c.servers[i].deviceStatus) {
-        handleStatus(c.servers[i], c, cabinet)
-      } else {
-        continue
-      }
-    }
-  }
-  cabinet.name = c.name
+  // cabinet.servers = []
+  // if (c && c.servers) {
+  //   cabinet.info = c
+  //   for (let i = 0; i < c.servers.length; i++) {
+  //     const server = createServer(
+  //       scope,
+  //       w - 4,
+  //       15,
+  //       d - 4,
+  //       px,
+  //       i === 0 ? 10 : py + 20 * (i + 1),
+  //       pz + 2,
+  //       c.servers[i]
+  //     ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
+  //     server.container = cabinet
+  //     server.info = c.servers[i]
+  //     cabinet.servers.push(server)
+  //     /**
+  //      * 服务器异常时的处理逻辑
+  //      * 1.机柜门打开
+  //      * 2.服务器标红
+  //      * 3.机柜顶部显示异常图标
+  //      */
+  //     if (c.servers[i].deviceStatus) {
+  //       handleStatus(c.servers[i], c, cabinet)
+  //     } else {
+  //       continue
+  //     }
+  //   }
+  // }
+  // cabinet.name = c.name
+
   // const group = new THREE.Group()
   // group.add(top, bottom, back, front, left, right)
   // group.name = c.name
@@ -915,7 +980,7 @@ function createResultBsp(scope, bsp, objectsCube, material) {
   result.material.needsUpdate = true // 更新纹理
   result.geometry.buffersNeedUpdate = true
   result.geometry.uvsNeedUpdate = true
-  scope.scene.add(result)
+  return result
 }
 /**
  * 加载字体

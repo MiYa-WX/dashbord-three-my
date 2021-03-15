@@ -224,7 +224,7 @@ export default {
      */
     createRenderer() {
       this.renderer = new THREE.WebGLRenderer({
-        logarithmicDepthBuffer: true, // 是否使用对数深度缓存
+        logarithmicDepthBuffer: false, // 是否使用对数深度缓存
         alpha: true,
         antialias: true // antialias:是否执行抗锯齿
       })
