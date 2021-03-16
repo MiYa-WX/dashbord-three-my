@@ -1,3 +1,4 @@
+import { Group } from '@tweenjs/tween.js'
 import * as THREE from 'three'
 const ThreeBSP = require('three-js-csg')(THREE)
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
@@ -509,198 +510,197 @@ function createDoor(scope) {
  * 绘制机柜
  */
 function createCabinet(scope, w, h, d, px, py, pz, c) {
-  // const floorThick = 4 / 2
-  // // 大盒子
-  // const geometryBig = new THREE.BoxGeometry(w, h, w)
-  // const meterialBig = new THREE.MeshBasicMaterial({
-  //   color: 0x999999,
+  const floorThick = 4 / 2
+  const cabinetThick = 2
+  const textureLoader = new THREE.TextureLoader()
+  const mapBack = textureLoader.load(
+    '/source/textures/computer/rack_door_back.jpg'
+  )
+  const mapFont = textureLoader.load(
+    '/source/textures/computer/rack_door_front.jpg'
+  )
+
+  // ***************start
+  // 大盒子
+  const geometryBig = new THREE.BoxGeometry(w, h, w)
+  const materialBig = new THREE.MeshBasicMaterial({
+    color: 0x999999,
+    opacity: 0.9,
+    transparent: true,
+    map: mapBack
+  })
+  const materialsTop = []
+  materialsTop.push(
+    materialBig,
+    materialBig,
+    new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(createText(c.name)) // canvas贴图
+    }),
+    materialBig,
+    materialBig,
+    materialBig
+  )
+
+  // 小盒子
+  const geometrySmall = new THREE.BoxGeometry(
+    w - floorThick,
+    h - floorThick * 2,
+    w - floorThick
+  )
+  const materialSmall = new THREE.MeshBasicMaterial({
+    color: 0x222222,
+    map: mapBack
+  })
+
+  const boxBig = new THREE.Mesh(geometryBig, materialBig)
+  boxBig.position.y = h / 2 + floorThick
+
+  const boxSmall = new THREE.Mesh(geometrySmall, materialSmall)
+  boxSmall.position.z -= floorThick
+  boxSmall.position.y = (h - 2) / 2 + floorThick * 2
+
+  const objectsCube = []
+  objectsCube.push(boxSmall)
+  const dong = createResultBsp(scope, boxBig, objectsCube, materialsTop)
+  dong.rotation.y -= 1 * Math.PI
+  dong.position.x = px
+  dong.position.z = pz
+  dong.position.y = py + h / 2 + floorThick
+  scope.scene.add(dong)
+  const menGeo = new THREE.BoxGeometry(w, h, cabinetThick) // 机箱门宽，高，厚
+  const mMaterials = []
+  mMaterials.push(
+    new THREE.MeshLambertMaterial({ color: 0x999999 }),
+    new THREE.MeshLambertMaterial({ color: 0x999999 }),
+    new THREE.MeshLambertMaterial({ color: 0x999999 }),
+    new THREE.MeshLambertMaterial({ color: 0x999999 }),
+    new THREE.MeshLambertMaterial({
+      map: mapFont,
+      overdraw: true
+    }),
+    new THREE.MeshBasicMaterial({
+      map: mapBack,
+      overdraw: true
+    })
+  )
+
+  const menMat = new THREE.MeshFaceMaterial(mMaterials)
+  const front = new THREE.Mesh(menGeo, menMat)
+  front.name = 'men'
+  front.position.x = px
+  front.position.z = pz + w / 2 + cabinetThick / 2
+  front.position.y = py + h / 2 + floorThick
+  scope.scene.add(front)
+  // ***************end
+
+  const cabinet = {}
+
+  // // 机柜的后
+  // const geometry = new THREE.BoxBufferGeometry(w, h, cabinetThick)
+  // const meterial = new THREE.MeshBasicMaterial({
+  //   color: 0x777777,
+  //   opacity: 0.2,
+  //   transparent: true
+  // })
+
+  // const back = new THREE.Mesh(geometry, meterial)
+
+  // back.position.x = px
+  // back.position.y = py + h / 2 + floorThick
+  // back.position.z = pz - d / 2 - cabinetThick
+
+  // back.container = cabinet
+  // back.name = 'back'
+  // scope.scene.add(back)
+
+  // cabinet.back = back
+
+  // // 机柜的左、右
+  // const meterial1 = new THREE.MeshBasicMaterial({
+  //   color: 0x777777,
   //   opacity: 0.9,
   //   transparent: true
   // })
 
-  // // 小盒子
-  // const geometrySmall = new THREE.BoxGeometry(w - 2, h - 2, w - 2)
-  // const meterialSmall = new THREE.MeshBasicMaterial({
-  //   color: 0x222222
+  // const left = new THREE.Mesh(geometry, meterial1)
+  // const right = new THREE.Mesh(geometry, meterial1)
+
+  // left.position.x = px + w / 2 - cabinetThick
+  // left.position.y = py + h / 2 + floorThick
+  // left.position.z = pz
+  // left.rotation.y = Math.PI / 2
+  // left.name = 'left'
+
+  // right.position.x = px - w / 2 + cabinetThick
+  // right.position.y = py + h / 2 + floorThick
+  // right.position.z = pz
+  // right.rotation.y = -Math.PI / 2
+  // right.name = 'right'
+
+  // left.container = cabinet
+  // right.container = cabinet
+
+  // scope.scene.add(left)
+  // scope.scene.add(right)
+
+  // cabinet.left = left
+  // cabinet.right = right
+
+  // // 机柜的底部、顶部
+  // const geometry2 = new THREE.BoxBufferGeometry(w, 2, d)
+  // const meterial2 = new THREE.MeshBasicMaterial({
+  //   color: 0x222222,
+  //   transparent: true
   // })
 
-  // const boxBig = new THREE.Mesh(geometryBig, meterialBig)
-  // boxBig.position.y = h / 2 + floorThick
-
-  // const boxSmall = new THREE.Mesh(geometrySmall, meterialSmall)
-  // boxSmall.position.z -= 2
-  // boxSmall.position.y = (h - 2) / 2 + floorThick
-
-  // const objectsCube = []
-  // objectsCube.push(boxSmall)
-  // const dong = createResultBsp(scope, boxBig, objectsCube, meterialSmall)
-  // dong.rotation.y -= 1 * Math.PI
-
-  // dong.position.x = px
-  // dong.position.z = pz
-  // dong.position.y = py + h / 2 + floorThick
-  // scope.scene.add(dong)
-
-  // const cabinetThick = 2
-  // const textureLoader = new THREE.TextureLoader()
-  // const menGeo = new THREE.BoxGeometry(w, h, cabinetThick) // 机箱门宽，高，厚
-  // const mMaterials = []
-  // mMaterials.push(
-  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
-  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
-  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
-  //   new THREE.MeshLambertMaterial({ color: 0x999999 }),
-  //   new THREE.MeshLambertMaterial({
-  //     map: textureLoader.load('/source/textures/computer/rack_front_door.jpg'),
-  //     overdraw: true
-  //   }),
+  // const meterialTop = [
+  //   meterial2, // 相对于机房门方向的右边
+  //   meterial2, // 相对于机房门方向的左边
   //   new THREE.MeshBasicMaterial({
-  //     map: textureLoader.load('/source/textures/computer/rack_door_back.jpg'),
-  //     overdraw: true
-  //   })
-  // )
+  //     // 机柜上面的标签字体
+  //     map: new THREE.CanvasTexture(createText(c.name)),
+  //     side: THREE.FrontSide
+  //   }), // 相对于机房门方向的上
+  //   meterial2, // 相对于机房门方向的下
+  //   meterial2, // 相对于机房门方向的前
+  //   meterial2 // 相对于机房门方向的后
+  // ]
 
-  // const menMat = new THREE.MeshFaceMaterial(meterialBig)
-  // const front = new THREE.Mesh(menGeo, menMat)
-  // front.name = 'men'
+  // const top = new THREE.Mesh(geometry2, meterialTop)
+  // const bottom = new THREE.Mesh(geometry2, meterial2)
+
+  // top.position.x = px
+  // top.position.y = py + h + floorThick
+  // top.position.z = pz
+  // top.name = 'top'
+
+  // bottom.position.x = px
+  // bottom.position.y = py + floorThick
+  // bottom.position.z = pz
+  // bottom.name = 'bottom'
+
+  // top.container = cabinet
+  // bottom.container = cabinet
+  // scope.scene.add(top)
+  // scope.scene.add(bottom)
+
+  // cabinet.top = top
+  // cabinet.bottom = bottom
+
+  // // 机柜门
+  // const geometry3 = new THREE.BoxBufferGeometry(w, h, 1)
+  // const meterial3 = new THREE.MeshBasicMaterial({
+  //   color: 0x003333,
+  //   opacity: 0.5,
+  //   transparent: true
+  // })
+
+  // const front = new THREE.Mesh(geometry3, meterial3)
+
   // front.position.x = px
-  // front.position.z = pz + w / 2 + cabinetThick / 2
   // front.position.y = py + h / 2 + floorThick
-  // scope.scene.add(front)
-
-  /**
-   * const materialCabinet = new THREE.MeshPhongMaterial({ color: 0x42474c })
-
-  const geometryCabinet = new THREE.BoxBufferGeometry(60, 150, 30)
-  const meshCabinet = new THREE.Mesh(geometryCabinet, materialCabinet)
-
-  const cabientGroup = new THREE.Group()
-  cabientGroup.add(meshCabinet)
-
-  cabientGroup.position.set(50, 75, 200)
-  cabientGroup.name = '机柜1'
-
-  const cabientGroupClone = cabientGroup.clone()
-  cabientGroupClone.position.set(-120, 75, 200)
-  cabientGroupClone.rotation.y += 1.5 * Math.PI
-  cabientGroupClone.name = '机柜2'
-
-  const cabientGroupClone1 = cabientGroupClone.clone()
-  cabientGroupClone1.position.set(-120, 75, 120)
-  cabientGroupClone1.name = '机柜3'
-
-  scope.scene.add(cabientGroup, cabientGroupClone, cabientGroupClone1)
-  */
-  const cabinet = {}
-
-  const cabinetThick = 2
-  const floorThick = 4 / 2 + 1
-  // 机柜的后
-  const geometry = new THREE.BoxBufferGeometry(w, h, cabinetThick)
-  const meterial = new THREE.MeshBasicMaterial({
-    color: 0x777777,
-    opacity: 0.2,
-    transparent: true
-  })
-
-  const back = new THREE.Mesh(geometry, meterial)
-
-  back.position.x = px
-  back.position.y = py + h / 2 + floorThick
-  back.position.z = pz - d / 2 - cabinetThick
-
-  back.container = cabinet
-  back.name = 'back'
-  scope.scene.add(back)
-
-  cabinet.back = back
-
-  // 机柜的左、右
-  const meterial1 = new THREE.MeshBasicMaterial({
-    color: 0x777777,
-    opacity: 0.9,
-    transparent: true
-  })
-
-  const left = new THREE.Mesh(geometry, meterial1)
-  const right = new THREE.Mesh(geometry, meterial1)
-
-  left.position.x = px + w / 2 - cabinetThick
-  left.position.y = py + h / 2 + floorThick
-  left.position.z = pz
-  left.rotation.y = Math.PI / 2
-  left.name = 'left'
-
-  right.position.x = px - w / 2 + cabinetThick
-  right.position.y = py + h / 2 + floorThick
-  right.position.z = pz
-  right.rotation.y = -Math.PI / 2
-  right.name = 'right'
-
-  left.container = cabinet
-  right.container = cabinet
-
-  scope.scene.add(left)
-  scope.scene.add(right)
-
-  cabinet.left = left
-  cabinet.right = right
-
-  // 机柜的底部、顶部
-  const geometry2 = new THREE.BoxBufferGeometry(w, 2, d)
-  const meterial2 = new THREE.MeshBasicMaterial({
-    color: 0x222222,
-    transparent: true
-  })
-
-  const meterialTop = [
-    meterial2, // 相对于机房门方向的右边
-    meterial2, // 相对于机房门方向的左边
-    new THREE.MeshBasicMaterial({
-      // 机柜上面的标签字体
-      map: new THREE.CanvasTexture(createText(c)),
-      side: THREE.FrontSide
-    }), // 相对于机房门方向的上
-    meterial2, // 相对于机房门方向的下
-    meterial2, // 相对于机房门方向的前
-    meterial2 // 相对于机房门方向的后
-  ]
-
-  const top = new THREE.Mesh(geometry2, meterialTop)
-  const bottom = new THREE.Mesh(geometry2, meterial2)
-
-  top.position.x = px
-  top.position.y = py + h + floorThick
-  top.position.z = pz
-  top.name = 'top'
-
-  bottom.position.x = px
-  bottom.position.y = py + floorThick
-  bottom.position.z = pz
-  bottom.name = 'bottom'
-
-  top.container = cabinet
-  bottom.container = cabinet
-  scope.scene.add(top)
-  scope.scene.add(bottom)
-
-  cabinet.top = top
-  cabinet.bottom = bottom
-
-  // 机柜门
-  const geometry3 = new THREE.BoxBufferGeometry(w, h, 1)
-  const meterial3 = new THREE.MeshBasicMaterial({
-    color: 0x003333,
-    opacity: 0.5,
-    transparent: true
-  })
-
-  const front = new THREE.Mesh(geometry3, meterial3)
-
-  front.position.x = px
-  front.position.y = py + h / 2 + floorThick
-  front.position.z = pz + d / 2
-  front.name = 'front'
+  // front.position.z = pz + d / 2
+  // front.name = 'front'
   front.open = false
   front.toggle = (o) => {
     if (!front.open) {
@@ -748,82 +748,47 @@ function createCabinet(scope, w, h, d, px, py, pz, c) {
         .start()
 
       front.open = false
-      // // 关闭机柜门时，将机柜中的服务器收起
-      // for (var i = 0; i < o.container.servers.length; i++) {
-      //   o.container.servers[i].toggle(o.container.servers[i], false)
-      // }
+      // 关闭机柜门时，将机柜中的服务器收起
+      for (var i = 0; i < o.container.servers.length; i++) {
+        o.container.servers[i].toggle(o.container.servers[i], false)
+      }
     }
   }
   front.container = cabinet
-  scope.scene.add(front)
+  // scope.scene.add(front)
 
-  cabinet.front = front
-  // cabinet.servers = []
-  // if (c && c.servers) {
-  //   cabinet.info = c
-  //   for (let i = 0; i < c.servers.length; i++) {
-  //     const server = createServer(
-  //       scope,
-  //       w - 4,
-  //       15,
-  //       d - 4,
-  //       px,
-  //       i === 0 ? 10 : py + 20 * (i + 1),
-  //       pz + 2,
-  //       c.servers[i]
-  //     ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
-  //     server.container = cabinet
-  //     server.info = c.servers[i]
-  //     cabinet.servers.push(server)
-  //     /**
-  //      * 服务器异常时的处理逻辑
-  //      * 1.机柜门打开
-  //      * 2.服务器标红
-  //      * 3.机柜顶部显示异常图标
-  //      */
-  //     if (c.servers[i].deviceStatus) {
-  //       handleStatus(c.servers[i], c, cabinet)
-  //     } else {
-  //       continue
-  //     }
-  //   }
-  // }
+  // cabinet.front = front
+  cabinet.servers = []
+  if (c && c.servers) {
+    cabinet.info = c
+    for (let i = 0; i < c.servers.length; i++) {
+      const server = createServer(
+        scope,
+        w - 4,
+        15,
+        d - 4,
+        px,
+        i === 0 ? 13 : py + 20 * (i + 1),
+        pz + 2,
+        c.servers[i]
+      ) // 服务器的厚度默认为 15 服务器之间的间隔为 5
+      server.container = cabinet
+      server.info = c.servers[i]
+      cabinet.servers.push(server)
+      /**
+       * 服务器异常时的处理逻辑
+       * 1.机柜门打开
+       * 2.服务器标红
+       * 3.机柜顶部显示异常图标
+       */
+      if (c.servers[i].deviceStatus) {
+        handleStatus(c.servers[i], c, dong)
+      } else {
+        continue
+      }
+    }
+  }
   // cabinet.name = c.name
-
-  // const group = new THREE.Group()
-  // group.add(top, bottom, back, front, left, right)
-  // group.name = c.name
-
-  // scope.scene.add(group)
-
-  // const geometryMerge = new THREE.BufferGeometry()
-  // const materialMerge = new THREE.MeshLambertMaterial({ color: 0xf33f66 })
-  // top.updateMatrix()
-  // geometryMerge.merge(top.geometry, top.matrix)
-
-  // bottom.updateMatrix()
-  // geometryMerge.merge(bottom.geometry, bottom.matrix)
-
-  // back.updateMatrix()
-  // geometryMerge.merge(back.geometry, back.matrix)
-
-  // front.updateMatrix()
-  // geometryMerge.merge(front.geometry, front.matrix)
-
-  // left.updateMatrix()
-  // geometryMerge.merge(left.geometry, left.matrix)
-
-  // right.updateMatrix()
-  // geometryMerge.merge(right.geometry, right.matrix)
-
-  // const merge = new THREE.Mesh(geometryMerge, materialMerge)
-  // merge.name = c.name
-  // merge.position.x = px
-  // merge.position.y = py
-  // merge.position.z = pz
-  // scope.scene.add(merge)
-  // console.info('scene', scope.scene)
-  // return merge
 }
 /**
  * 绘制服务器
@@ -956,12 +921,15 @@ function handleStatus(serversInfo, cabinetInfo, cabinetMesh) {
     (serversInfo.deviceStatus ? '异常' : '正常') // 显示详细信息
 
   const label = new CSS2DObject(text)
-  label.position.set(
-    cabinetMesh.top.position.x - cabinetInfo.position.x + 100 / 2,
-    cabinetMesh.top.position.y - cabinetInfo.position.y - 50,
-    cabinetMesh.top.position.z - cabinetInfo.position.z
-  )
-  cabinetMesh.top.add(label)
+  label.position.x = cabinetInfo.position.x + cabinetInfo.size.w
+  label.position.y = cabinetInfo.position.y + cabinetInfo.size.h
+  // label.position.set(
+  //   cabinetInfo.position.x,
+  //   cabinetMesh.position.y + cabinetInfo.size.h,
+  //   cabinetMesh.position.z
+  // )
+  // console.info('po', label.position)
+  cabinetMesh.add(label)
 }
 
 /**
@@ -974,7 +942,7 @@ function createResultBsp(scope, bsp, objectsCube, material) {
     BSP = BSP.subtract(lessBsp)
   }
   const result = BSP.toMesh(material)
-  result.material.flatshading = THREE.FlatShading // 定义材质是否使用平面着色进行渲染
+  result.material.flatshading = true // 定义材质是否使用平面着色进行渲染
   result.geometry.computeFaceNormals() // 重新计算几何体侧面法向量
   result.geometry.computeVertexNormals()
   result.material.needsUpdate = true // 更新纹理
@@ -985,7 +953,7 @@ function createResultBsp(scope, bsp, objectsCube, material) {
 /**
  * 加载字体
  **/
-function createText(cabinetInfo) {
+function createText(text) {
   const width = 100
   const height = 40
   var canvas = document.createElement('canvas')
@@ -999,7 +967,7 @@ function createText(cabinetInfo) {
   ctx.fillStyle = '#ffffff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(cabinetInfo.name, width / 2, height / 2)
+  ctx.fillText(text, width / 2, height / 2)
   return canvas
 }
 export {
