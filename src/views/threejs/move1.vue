@@ -70,17 +70,17 @@ export default {
       )
       this.parent.add(this.splineCamera)
 
-      /**
-       * 创建网格模型
-       */
-      const geometry = new THREE.BoxGeometry(50, 100, 50) // 创建一个立方体几何对象Geometry
-      // 材质对象Material
-      const material = new THREE.MeshLambertMaterial({
-        color: '#0000ff'
-      })
-      const mesh1 = new THREE.Mesh(geometry, material) // 网格模型对象Mesh
-      mesh1.position.set(10, 0, 50)
-      this.scene.add(mesh1) // 网格模型添加到场景中
+      // /**
+      //  * 创建网格模型
+      //  */
+      // const geometry = new THREE.BoxGeometry(50, 100, 50) // 创建一个立方体几何对象Geometry
+      // // 材质对象Material
+      // const material = new THREE.MeshLambertMaterial({
+      //   color: '#0000ff'
+      // })
+      // const mesh1 = new THREE.Mesh(geometry, material) // 网格模型对象Mesh
+      // mesh1.position.set(10, 0, 50)
+      // this.scene.add(mesh1) // 网格模型添加到场景中
 
       this.addTube()
 
@@ -149,7 +149,7 @@ export default {
         this.lookAt
       )
       // 注释这句代码后，镜头朝向了原点位置
-      // this.lookAt.multiplyScalar(this.params.scale) // 将该向量与所传入的标量s进行相乘
+      this.lookAt.multiplyScalar(this.params.scale) // 将该向量与所传入的标量s进行相乘
 
       // camera orientation 2 - up orientation via normal
       if (!this.params.lookAhead) {

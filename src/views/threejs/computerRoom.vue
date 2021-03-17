@@ -54,20 +54,20 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls'
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
-import { objectModel, btnsConfig } from '@/utils/modelData'
+import { objectModel, btnsConfig } from '@/views/threejs/utils/modelData'
 // 引入加载器，用于glTF格式的的模型添加
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import {
-  createBox,
   createCylinder,
-  createPlane,
-  createEmptyBox,
   createFloor,
   createWall,
   createDoor,
   createCabinet,
-  createLines
-} from '@/utils/createModelObject'
+  createLines,
+  // createBox,
+  // guid,
+  modelBsp
+} from '@/views/threejs/utils/createModelObject'
 
 export default {
   name: 'MeetingRoom',
@@ -112,46 +112,36 @@ export default {
 
     // 一些辅助对象
     this.createHelperObject(true, false)
-
-    // 绘制地板
-    createFloor(this)
-    // 绘制墙壁
-    createWall(this)
-    // 绘制门
-    createDoor(this)
-    // 绘制机柜
-    for (let i = 0; i < objectModel.length; i++) {
-      const c = objectModel[i].cabinet
-      createCabinet(
-        this,
-        c.size.w,
-        c.size.h,
-        c.size.d,
-        c.position.x,
-        c.position.y,
-        c.position.z,
-        c
-      )
-    }
-    // 绘制监控摄像头模型
-    createCylinder(this)
-    // 绘制线路
-    this.isShowLines && createLines(this)
-
-    // // 添加3D模型
+    // // 绘制机柜
     // for (let i = 0; i < objectModel.length; i++) {
-    //   const object = objectModel[i]
-    //   this.init3DModel(object)
+    //   const item = objectModel[i]
+    //   const c = item.cabinet
+    //   if (!c) {
+    //     continue
+    //   }
+    //   createCabinet(
+    //     this,
+    //     c.size.w,
+    //     c.size.h,
+    //     c.size.d,
+    //     c.position.x,
+    //     c.position.y,
+    //     c.position.z,
+    //     c
+    //   )
     // }
+
+    // 添加3D模型
+    for (let i = 0; i < objectModel.length; i++) {
+      const objectItem = objectModel[i]
+      this.init3DModel(objectItem)
+    }
     if (this.isFirstPerson) {
       this.initFirstPersonControls()
     } else {
       this.initOrbitControls()
     }
     this.render()
-
-    // this.roomDom.addEventListener('click', this.onClick, false)
-    // this.roomDom.addEventListener('dbclick', this.dbClick, false)
     window.addEventListener('resize', this.onWindowResize, false)
   },
   destroyed() {
@@ -169,9 +159,6 @@ export default {
     this.resetControls()
     this.stats = null
     this.labelRenderer = null
-
-    const gl = this.renderer.domElement.getContext('webgl')
-    gl && gl.getExtension('WEBGL_lose_context').loseContext()
   },
   methods: {
     handleDialogClose() {
@@ -260,8 +247,7 @@ export default {
       )
       this.camera.name = 'mainCamera'
       // // 设置摄像机位置
-      this.camera.position.set(0, 500, 500)
-      // this.camera.position.set(0, 1000, -1800)
+      this.camera.position.set(0, 1000, 600)
       // 相机指向中心位置
       this.camera.lookAt({ x: 0, y: 0, z: 0 })
     },
@@ -329,23 +315,56 @@ export default {
       const objType = object.type
       let obj = null
       switch (objType) {
-        case 'box':
-          obj = createBox(object)
+        case 'floor':
+          obj = createFloor(object)
           this.scene.add(obj)
           break
-        case 'cylinder':
+        case 'wall':
+          for (let i = 0; i < object.wallData.length; i++) {
+            const item = object.wallData[i]
+            item.style = {
+              skinWhole: {
+                skinColor: '',
+                skinImgUrl: object.style.skinWhole.skinImgUrl
+              }
+            }
+            obj = createWall(item)
+            // 墙上是否有门
+            if (item.door.isDoor) {
+              const geometryDong = new THREE.BoxGeometry(80, 150 - 30, 2)
+              const dongMesh = new THREE.Mesh(geometryDong, obj.material)
+              // TODO 位置这个地方计算有点误差，虽然现在效果是可以的，但是洞的高度不对
+              dongMesh.position.set(
+                item.position.x,
+                item.position.y - 30 / 2,
+                item.position.z
+              )
+              dongMesh.name = '门洞'
+              const objectsCube = []
+              objectsCube.push(dongMesh)
+              obj = modelBsp(obj, objectsCube, obj.material)
+              obj.name = item.name + '门洞'
+
+              // 添加门
+              const doorOobj = createDoor(item.door)
+              this.scene.add(doorOobj)
+            }
+            // TODO 墙上是否有窗户
+            // if (item.windows.isWindows) {
+            // }
+            this.scene.add(obj)
+          }
+          break
+        case 'cylinderCamera':
           obj = createCylinder(object)
           this.scene.add(obj)
           break
-        case 'plane':
-          obj = createPlane(object)
-          this.scene.add(obj)
-          break
-        case 'emptyBox':
-          obj = createEmptyBox(object)
+        case 'cabinet':
+          obj = createCabinet(object)
           this.scene.add(obj)
           break
       }
+      console.info('see scene children', this.scene.children)
     },
     initFirstPersonControls() {
       this.controls = new FirstPersonControls(
@@ -416,7 +435,17 @@ export default {
         case 'btnConnection':
           this.isShowLines = !this.isShowLines
           if (this.isShowLines) {
-            createLines(this)
+            for (let i = 0; i < objectModel.length; i++) {
+              const objectItem = objectModel[i]
+              if (objectItem.type !== 'line') {
+                continue
+              }
+              for (let i = 0; i < objectItem.linesData.length; i++) {
+                const item = objectItem.linesData[i]
+                const obj = createLines(item)
+                this.scene.add(obj)
+              }
+            }
           } else {
             for (let i = this.scene.children.length - 1; i >= 0; i--) {
               const element = this.scene.children[i]
@@ -559,9 +588,6 @@ export default {
 
       this.isFirstPerson && this.controls.update(this.clock.getDelta())
       this.stats && this.stats.update()
-
-      // 实时渲染
-      this.myReqAnima = requestAnimationFrame(this.render)
       if (this.isPathAuto && this.circleP) {
         this.updateAuto()
       }
@@ -570,6 +596,9 @@ export default {
       this.renderer.render(this.scene, this.camera)
       this.labelRenderer.render(this.scene, this.camera)
       this.renderAuto()
+
+      // 实时渲染
+      this.myReqAnima = requestAnimationFrame(this.render)
     },
     walkAuto() {
       // const geometryP = new THREE.SphereGeometry(10, 32, 32)
@@ -723,7 +752,7 @@ export default {
         // 创建射线投射器对象
         const raycaster = new THREE.Raycaster(this.camera.position, ray)
         // 返回射线选中的对象
-        const intersects = raycaster.intersectObjects(this.scene.children)
+        const intersects = raycaster.intersectObjects(this.scene.children, true)
         const tooltipDom = document.getElementById('tooltip')
         if (intersects.length === 0) {
           tooltipDom.style.display = 'none' // 隐藏说明性标签
@@ -732,32 +761,113 @@ export default {
         // 获取选中最近的 Mesh 对象
         const selectObject = intersects[0].object
         console.info('当前点击的物体', selectObject)
-
-        if (!selectObject.name.includes('服务器')) {
-          tooltipDom.style.display = 'none' // 隐藏说明性标签
-
-          if (selectObject.name.includes('摄像头')) {
-            this.handleDialogOpen(selectObject.name)
-          }
-        } else {
-          if (!selectObject.open) {
-            tooltipDom.style.display = 'block' // 显示说明性标签
-            // 修改标签的位置
-            tooltipDom.style.left = x - roomRect.x + 50 + 'px' // roomRect.x是元素的原点横坐标
-            tooltipDom.style.top = y - roomRect.y - 30 + 'px' // roomRect.y是元素的原点纵坐标
-            tooltipDom.innerHTML =
-              selectObject.name +
-              '<br/>' +
-              '运行' +
-              (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
-          } else {
-            tooltipDom.style.display = 'none' // 隐藏说明性标签
-          }
+        if (selectObject.name.includes('doorFront')) {
+          this.openDoor(selectObject)
         }
-        if (selectObject.toggle && typeof selectObject.toggle === 'function') {
-          selectObject.toggle(selectObject)
+        if (selectObject.name.includes('服务器')) {
+          this.openServers(selectObject)
         }
+        // if (!selectObject.name.includes('服务器')) {
+        //   tooltipDom.style.display = 'none' // 隐藏说明性标签
+
+        //   if (selectObject.name.includes('摄像头')) {
+        //     this.handleDialogOpen(selectObject.name)
+        //   }
+        // } else {
+        //   if (!selectObject.open) {
+        //     tooltipDom.style.display = 'block' // 显示说明性标签
+        //     // 修改标签的位置
+        //     tooltipDom.style.left = x - roomRect.x + 50 + 'px' // roomRect.x是元素的原点横坐标
+        //     tooltipDom.style.top = y - roomRect.y - 30 + 'px' // roomRect.y是元素的原点纵坐标
+        //     tooltipDom.innerHTML =
+        //       selectObject.name +
+        //       '<br/>' +
+        //       '运行' +
+        //       (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
+        //   } else {
+        //     tooltipDom.style.display = 'none' // 隐藏说明性标签
+        //   }
+        // }
+        // if (selectObject.toggle && typeof selectObject.toggle === 'function') {
+        //   selectObject.toggle(selectObject)
+        // }
       }, 250)
+    },
+    openDoor(selectObject) {
+      const scale = selectObject.geometry.parameters
+
+      if (selectObject.rotation.y === 0) {
+        new TWEEN.Tween(selectObject.rotation)
+          .to(
+            {
+              y: 0.6 * Math.PI
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+
+        new TWEEN.Tween(selectObject.position)
+          .to(
+            {
+              x: selectObject.position.x + scale.width / 2,
+              z: selectObject.position.z + scale.width / 2
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+      } else {
+        new TWEEN.Tween(selectObject.rotation)
+          .to(
+            {
+              y: 0
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+        new TWEEN.Tween(selectObject.position)
+          .to(
+            {
+              x: selectObject.position.x - scale.width / 2,
+              z: selectObject.position.z - scale.width / 2
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+      }
+    },
+    openServers(selectObject) {
+      const scale = selectObject.geometry.parameters
+      const po = selectObject.position.z
+      selectObject.open = false
+
+      if (selectObject.open) {
+        new TWEEN.Tween(selectObject.position)
+          .to(
+            {
+              z: selectObject.position.z - scale.depth / 2
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+        selectObject.open = true
+      } else {
+        new TWEEN.Tween(selectObject.position)
+          .to(
+            {
+              z: selectObject.position.z + scale.depth / 2
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
+
+        selectObject.open = false
+      }
     },
     /**
      * 双击事件
