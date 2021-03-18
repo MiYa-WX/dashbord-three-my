@@ -112,24 +112,6 @@ export default {
 
     // 一些辅助对象
     this.createHelperObject(true, false)
-    // // 绘制机柜
-    // for (let i = 0; i < objectModel.length; i++) {
-    //   const item = objectModel[i]
-    //   const c = item.cabinet
-    //   if (!c) {
-    //     continue
-    //   }
-    //   createCabinet(
-    //     this,
-    //     c.size.w,
-    //     c.size.h,
-    //     c.size.d,
-    //     c.position.x,
-    //     c.position.y,
-    //     c.position.z,
-    //     c
-    //   )
-    // }
 
     // 添加3D模型
     for (let i = 0; i < objectModel.length; i++) {
@@ -247,7 +229,7 @@ export default {
       )
       this.camera.name = 'mainCamera'
       // // 设置摄像机位置
-      this.camera.position.set(0, 1000, 600)
+      this.camera.position.set(0, 900, 1000)
       // 相机指向中心位置
       this.camera.lookAt({ x: 0, y: 0, z: 0 })
     },
@@ -490,15 +472,15 @@ export default {
       if (this.isPathAuto) {
         this.walkAuto()
       } else {
-        // this.circleP.geometry.dispose()
-        // this.circleP.material.dispose()
+        this.circleP.geometry.dispose()
+        this.circleP.material.dispose()
 
-        this.circleP.traverse(function(obj) {
-          if (obj.type === 'Mesh') {
-            obj.geometry.dispose()
-            obj.material.dispose()
-          }
-        })
+        // this.circleP.traverse((obj) => {
+        //   if (obj.type === 'Mesh') {
+        //     obj.geometry.dispose()
+        //     obj.material.dispose()
+        //   }
+        // })
 
         let pathLine = this.scene.getObjectByName('巡检路径')
         pathLine.geometry.dispose()
@@ -601,32 +583,32 @@ export default {
       this.myReqAnima = requestAnimationFrame(this.render)
     },
     walkAuto() {
-      // const geometryP = new THREE.SphereGeometry(10, 32, 32)
-      // const materialP = new THREE.MeshBasicMaterial({
-      //   color: 0x409eff
-      // })
-      // this.circleP = new THREE.Mesh(geometryP, materialP)
-      // this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
-      // this.scene.add(this.circleP)
-
-      const loader = new GLTFLoader()
-
-      loader.load('/models//RobotExpressive.glb', (gltf) => {
-        const model = gltf.scene
-        model.scale.set(10, 10, 10)
-        model.rotation.y = Math.PI
-        this.mixer = new THREE.AnimationMixer(model)
-        const action = this.mixer.clipAction(gltf.animations[10])
-        action.play()
-        this.circleP = model
-        this.scene.add(this.circleP)
+      const geometryP = new THREE.SphereGeometry(10, 32, 32)
+      const materialP = new THREE.MeshBasicMaterial({
+        color: 0x409eff
       })
+      this.circleP = new THREE.Mesh(geometryP, materialP)
+      this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
+      this.scene.add(this.circleP)
+
+      // const loader = new GLTFLoader()
+
+      // loader.load('/models//RobotExpressive.glb', (gltf) => {
+      //   const model = gltf.scene
+      //   model.scale.set(10, 10, 10)
+      //   model.rotation.y = Math.PI
+      //   this.mixer = new THREE.AnimationMixer(model)
+      //   const action = this.mixer.clipAction(gltf.animations[10])
+      //   action.play()
+      //   this.circleP = model
+      //   this.scene.add(this.circleP)
+      // })
 
       // 轨迹线
       const path = [
-        new THREE.Vector3(0, 5, (128 * 3) / 2 - 20),
-        new THREE.Vector3(-10, 5, 50),
-        new THREE.Vector3(-150, 5, 50)
+        new THREE.Vector3(0, 5, 600 / 2 - 50 - 20),
+        new THREE.Vector3(-10, 5, 120),
+        new THREE.Vector3(-150, 5, 120)
       ]
 
       this.curve = new THREE.CatmullRomCurve3(
@@ -675,9 +657,12 @@ export default {
         this.circleP.quaternion.slerp(toRot, 0.2)
         this.circleP.position.set(point.x, point.y, point.z)
 
-        // 在轨迹线上移动的摄像头朝向
-        this.camera.lookAt(this.circleP.position)
         // todo 摄像头模型的视角获取
+        this.controls.target = new THREE.Vector3(point.x, point.y, point.z)
+        this.camera.quaternion.slerp(toRot, 0.5)
+        this.camera.position.set(point.x, point.y, point.z) // + 80
+        // 在轨迹线上移动的摄像头朝向
+        this.camera.lookAt(new THREE.Vector3(point.x, point.y, point.z))
         this.pos += 0.001
       } else {
         // 回到最初的位置就不要动啦
@@ -767,46 +752,41 @@ export default {
         if (selectObject.name.includes('服务器')) {
           this.openServers(selectObject)
         }
-        // if (!selectObject.name.includes('服务器')) {
-        //   tooltipDom.style.display = 'none' // 隐藏说明性标签
 
-        //   if (selectObject.name.includes('摄像头')) {
-        //     this.handleDialogOpen(selectObject.name)
-        //   }
-        // } else {
-        //   if (!selectObject.open) {
-        //     tooltipDom.style.display = 'block' // 显示说明性标签
-        //     // 修改标签的位置
-        //     tooltipDom.style.left = x - roomRect.x + 50 + 'px' // roomRect.x是元素的原点横坐标
-        //     tooltipDom.style.top = y - roomRect.y - 30 + 'px' // roomRect.y是元素的原点纵坐标
-        //     tooltipDom.innerHTML =
-        //       selectObject.name +
-        //       '<br/>' +
-        //       '运行' +
-        //       (selectObject.info.deviceStatus ? '异常' : '正常') // 显示详细信息
-        //   } else {
-        //     tooltipDom.style.display = 'none' // 隐藏说明性标签
-        //   }
-        // }
-        // if (selectObject.toggle && typeof selectObject.toggle === 'function') {
-        //   selectObject.toggle(selectObject)
-        // }
+        if (!selectObject.name.includes('服务器')) {
+          tooltipDom.style.display = 'none' // 隐藏说明性标签
+
+          if (selectObject.name.includes('摄像头')) {
+            this.handleDialogOpen(selectObject.name)
+          }
+        } else {
+          tooltipDom.style.display = 'block' // 显示说明性标签
+          // 修改标签的位置
+          tooltipDom.style.left = x - roomRect.x + 50 + 'px' // roomRect.x是元素的原点横坐标
+          tooltipDom.style.top = y - roomRect.y - 30 + 'px' // roomRect.y是元素的原点纵坐标
+          tooltipDom.innerHTML =
+            selectObject.name +
+            '<br/>' +
+            '运行' +
+            (selectObject.data.deviceStatus ? '异常' : '正常') // 显示详细信息
+        }
       }, 250)
     },
     openDoor(selectObject) {
       const scale = selectObject.geometry.parameters
 
       if (selectObject.rotation.y === 0) {
+        // 门的旋转
         new TWEEN.Tween(selectObject.rotation)
           .to(
             {
-              y: 0.6 * Math.PI
+              y: 0.5 * Math.PI
             },
             1000
           )
           .easing(TWEEN.Easing.Quadratic.InOut)
           .start()
-
+        // 门的位置
         new TWEEN.Tween(selectObject.position)
           .to(
             {
@@ -817,6 +797,17 @@ export default {
           )
           .easing(TWEEN.Easing.Quadratic.InOut)
           .start()
+        // // 相机的位置 相机位置变化之后 会有问题 先注释
+        // new TWEEN.Tween(this.camera.position)
+        //   .to(
+        //     {
+        //       x: selectObject.position.x,
+        //       y: selectObject.position.y + scale.height * 0.95,
+        //       z: selectObject.position.z + scale.width * 1.85
+        //     },
+        //     500
+        //   )
+        //   .start()
       } else {
         new TWEEN.Tween(selectObject.rotation)
           .to(
@@ -841,21 +832,11 @@ export default {
     },
     openServers(selectObject) {
       const scale = selectObject.geometry.parameters
-      const po = selectObject.position.z
-      selectObject.open = false
-
-      if (selectObject.open) {
-        new TWEEN.Tween(selectObject.position)
-          .to(
-            {
-              z: selectObject.position.z - scale.depth / 2
-            },
-            1000
-          )
-          .easing(TWEEN.Easing.Quadratic.InOut)
-          .start()
-        selectObject.open = true
-      } else {
+      if (!selectObject.data.deviceStatus) {
+        return
+      }
+      // 如果服务器在原位置,则执行推出 30是服务器相对于机柜的原位置z坐标
+      if (selectObject.position.z === 30) {
         new TWEEN.Tween(selectObject.position)
           .to(
             {
@@ -865,8 +846,16 @@ export default {
           )
           .easing(TWEEN.Easing.Quadratic.InOut)
           .start()
-
-        selectObject.open = false
+      } else {
+        new TWEEN.Tween(selectObject.position)
+          .to(
+            {
+              z: selectObject.position.z - scale.depth / 2
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .start()
       }
     },
     /**

@@ -70,17 +70,17 @@ export default {
       )
       this.parent.add(this.splineCamera)
 
-      // /**
-      //  * 创建网格模型
-      //  */
-      // const geometry = new THREE.BoxGeometry(50, 100, 50) // 创建一个立方体几何对象Geometry
-      // // 材质对象Material
-      // const material = new THREE.MeshLambertMaterial({
-      //   color: '#0000ff'
-      // })
-      // const mesh1 = new THREE.Mesh(geometry, material) // 网格模型对象Mesh
+      /**
+       * 创建网格模型
+       */
+      const geometry = new THREE.BoxGeometry(50, 40, 30) // 创建一个立方体几何对象Geometry
+      // 材质对象Material
+      const material = new THREE.MeshLambertMaterial({
+        color: 0xffffff
+      })
+      const mesh1 = new THREE.Mesh(geometry, material) // 网格模型对象Mesh
       // mesh1.position.set(10, 0, 50)
-      // this.scene.add(mesh1) // 网格模型添加到场景中
+      this.scene.add(mesh1) // 网格模型添加到场景中
 
       this.addTube()
 

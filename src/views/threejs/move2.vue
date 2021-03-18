@@ -101,9 +101,9 @@ export default {
       if (this.pos < 1) {
         pointLight.position = this.curve.getPointAt(this.pos) // 光移动
         this.sphereLightMesh.position.copy(pointLight.position) // 物体跟着光移动
-        this.camera.position.x = pointLight.position.x + 5
-        this.camera.position.y = pointLight.position.y
-        this.camera.position.z = pointLight.position.z
+        // this.camera.position.x = pointLight.position.x + 5
+        // this.camera.position.y = pointLight.position.y
+        // this.camera.position.z = pointLight.position.z
         // 在轨迹线上移动的摄像头朝向
         this.camera.lookAt(pointLight.position)
         this.pos += 0.001

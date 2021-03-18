@@ -294,9 +294,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: 50,
-      y: 2,
-      z: 10
+      x: configConstant.CABINET_X_INIT,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
     },
     style: {
       skinWhole: {
@@ -306,28 +306,7 @@ export const objectModel = [
       }
     },
     door: {
-      isDoor: true,
-      show: true,
-      name: 'doorFront',
-      type: 'box',
-      position: {
-        x: 50,
-        y: 10,
-        z: 10
-      },
-      scale: {
-        width: configConstant.CABINET_WIDTH,
-        height: configConstant.CABINET_HEIGHT,
-        depth: configConstant.CABINET_THICK
-      },
-      style: {
-        skinWhole: {
-          skinColor: 0xffffff,
-          skinImgUrl: 'rack_door_front.jpg',
-          repeatx: false,
-          repeaty: false
-        }
-      }
+      isDoor: true
     },
     servers: [
       {
@@ -337,13 +316,14 @@ export const objectModel = [
         scale: {
           width:
             configConstant.CABINET_WIDTH - 2 * configConstant.CABINET_THICK,
-          height: 15,
+          height: configConstant.SERVER_HEIGHT,
           depth: configConstant.CABINET_DEPTH - 2 * configConstant.CABINET_THICK
         },
+        // 相对于机柜的位置
         position: {
-          // x: 50,
-          // y: 0,
-          // z: 0
+          x: 0,
+          y: 0,
+          z: 0
         },
         style: {
           skinWhole: {
@@ -354,185 +334,210 @@ export const objectModel = [
         },
         ip: '192.168.62.71',
         deviceStatus: 1 // 0正常  1异常
+      },
+      {
+        show: true,
+        name: '1-2号服务器',
+        type: 'box',
+        scale: {
+          width:
+            configConstant.CABINET_WIDTH - 2 * configConstant.CABINET_THICK,
+          height: configConstant.SERVER_HEIGHT,
+          depth: configConstant.CABINET_DEPTH - 2 * configConstant.CABINET_THICK
+        },
+        position: {
+          x: 0,
+          y: 30,
+          z: 0
+        },
+        style: {
+          skinWhole: {
+            skinImgUrl: 'rack_door_back.jpg',
+            repeatx: false,
+            repeaty: false
+          }
+        },
+        ip: '192.168.62.71',
+        deviceStatus: 0 // 0正常  1异常
       }
     ]
+  },
+  {
+    show: true,
+    name: '2号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '3号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '4号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '5号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '6号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '7号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '8号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: -configConstant.CABINET_X_INIT,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
   }
   // 机柜 end
-
-  // {
-  //   cabinet: {
-  //     show: true,
-  //     uuid: '1',
-  //     name: '1号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸
-  //     position: { x: 50, y: 0, z: 0 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '11',
-  //         name: '1-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: ''
-  //       },
-  //       {
-  //         uuid: '12',
-  //         name: '1-2号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '',
-  //         deviceStatus: 1 // 0正常  1异常
-  //       },
-  //       {
-  //         uuid: '13',
-  //         name: '1-3号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: ''
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '2',
-  //     name: '2号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸
-  //     position: { x: 100, y: 0, z: 0 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '21',
-  //         name: '2-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: ''
-  //       },
-  //       {
-  //         uuid: '22',
-  //         name: '2-2号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: ''
-  //       },
-  //       {
-  //         uuid: '23',
-  //         name: '2-3号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: ''
-  //       },
-  //       {
-  //         uuid: '24',
-  //         name: '2-4号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '3',
-  //     name: '3号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-  //     position: { x: -50, y: 0, z: 0 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '31',
-  //         name: '3-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '4',
-  //     name: '4号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸
-  //     position: { x: -100, y: 0, z: 0 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '41',
-  //         name: '4-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '5',
-  //     name: '5号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸
-  //     position: { x: -150, y: 0, z: 0 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '51',
-  //         name: '5-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '6',
-  //     name: '6号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-  //     position: { x: -50, y: 0, z: -110 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '61',
-  //         name: '6-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg',
-  //         deviceStatus: 1 // 0正常  1异常
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '7',
-  //     name: '7号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-  //     position: { x: -100, y: 0, z: -110 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '71',
-  //         name: '7-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // },
-  // {
-  //   cabinet: {
-  //     uuid: '8',
-  //     name: '8号机柜',
-  //     size: { w: 40, h: 100, d: 40 }, // 尺寸 宽、高、深
-  //     position: { x: -150, y: 0, z: -110 }, // 位置
-  //     servers: [
-  //       {
-  //         uuid: '81',
-  //         name: '8-1号服务器',
-  //         ip: '',
-  //         apps: '',
-  //         skinImgurl: '/source/textures/computer/3.jpg'
-  //       }
-  //     ]
-  //   }
-  // }
 ]
 
 // 机房操作按钮

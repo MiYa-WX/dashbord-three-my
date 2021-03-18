@@ -1,8 +1,14 @@
-import { Group } from '@tweenjs/tween.js'
+import {
+  Group
+} from '@tweenjs/tween.js'
 import * as THREE from 'three'
 const ThreeBSP = require('three-js-csg')(THREE)
-import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
-import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import {
+  TWEEN
+} from 'three/examples/jsm/libs/tween.module.min.js'
+import {
+  CSS2DObject
+} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 import * as configConstant from '@/views/threejs/utils/configConstant'
 
@@ -89,6 +95,7 @@ function createFloor(obj) {
   model.receiveShadow = true
   model.uuid = obj.uuid
   model.name = obj.name
+  model.data = obj
   model.position.set(positionX, positionY, positionZ)
   return model
 }
@@ -119,6 +126,7 @@ function createWall(obj) {
   model.receiveShadow = true
   model.uuid = obj.uuid
   model.name = obj.name
+  model.data = obj
   model.position.set(positionX, positionY, positionZ)
 
   if (
@@ -202,6 +210,7 @@ function createDoor(obj) {
   model.receiveShadow = true
   model.uuid = obj.uuid
   model.name = obj.name
+  model.data = obj
   model.position.set(positionX, positionY, positionZ)
 
   if (
@@ -260,6 +269,7 @@ function createLines(obj) {
   }
   const model = new THREE.Line(geometryLine, materialLine)
   model.name = obj.name
+  model.data = obj
   if (obj.position != null && typeof obj.position !== 'undefined') {
     model.position.set(obj.position.x, obj.position.y, obj.position.z)
   }
@@ -309,6 +319,7 @@ function createCylinder(obj) {
   model.receiveShadow = true
   model.uuid = obj.uuid
   model.name = obj.name
+  model.data = obj
   model.position.set(positionX, positionY, positionZ)
   if (
     obj.rotation != null &&
@@ -346,25 +357,17 @@ function createCylinder(obj) {
  * 绘制机柜
  */
 function createCabinet(obj) {
-  debugger
   const width = obj.scale.width || 100
   const height = obj.scale.height || 100
   const depth = obj.scale.depth || 100
   const positionX = obj.position.x || 0
   const positionY = obj.position.y || 0
   const positionZ = obj.position.z || 0
-  const url = configConstant.FILE_URL + obj.style.skinWhole.skinImgUrl
   const mapBack = textureLoader.load(
     configConstant.FILE_URL + 'rack_door_back.jpg'
   )
-  const mapFront = textureLoader.load(
-    configConstant.FILE_URL + 'rack_door_front.jpg'
-  )
   const materialBack = new THREE.MeshBasicMaterial({
     map: mapBack
-  })
-  const materialFront = new THREE.MeshBasicMaterial({
-    map: mapFront
   })
   const materialTexture = new THREE.MeshBasicMaterial({
     map: new THREE.CanvasTexture(createText(obj.name)) // canvas贴图
@@ -450,68 +453,136 @@ function createCabinet(obj) {
   cabinetGroup.add(topModel, bottomModel, leftModel, rightModel, backModel)
 
   if (obj.door.isDoor) {
-    // 创建门
-    const doorGeometry = new THREE.BoxBufferGeometry(
-      width, // + 2 * configConstant.CABINET_THICK, // 加上后会重叠闪烁
-      height,
-      configConstant.CABINET_THICK
-    )
-    const materialDoorArr = []
-    materialDoorArr.push(
-      materialBack,
-      materialBack,
-      materialBack,
-      materialBack,
-      materialFront,
-      materialBack
-    )
-    const doorModel = new THREE.Mesh(doorGeometry, materialDoorArr)
-    doorModel.name = obj.name + 'doorFront'
-    doorModel.position.set(
-      positionX + width,
-      positionY + height / 2 + configConstant.CABINET_THICK / 2,
-      positionZ + depth / 2 + configConstant.CABINET_THICK / 2
-    )
+    // 创建机柜门
+    const doorModel = createCabinetDoor(materialBack, positionX, positionY, positionZ, obj)
     cabinetGroup.add(doorModel)
   }
   if (obj.servers && obj.servers.length > 0) {
     for (let i = 0; i < obj.servers.length; i++) {
-      debugger
       const item = obj.servers[i]
       // 创建服务器
-      const serversGeometry = new THREE.BoxBufferGeometry(
-        item.scale.width,
-        item.scale.height,
-        item.scale.depth
-      )
-      const materialBasic = new THREE.MeshBasicMaterial({ color: 0xbbbbbb })
-      const materialServeBack = new THREE.MeshBasicMaterial({
-        map: textureLoader.load(configConstant.FILE_URL + '2.jpg')
-      })
-      const materialServeFront = new THREE.MeshBasicMaterial({
-        map: textureLoader.load(configConstant.FILE_URL + '4.jpg')
-      })
-
-      const materialServersArr = []
-      materialServersArr.push(
-        materialBasic,
-        materialBasic,
-        materialBasic,
-        materialBasic,
-        materialServeFront,
-        materialServeBack
-      )
-      const serversModel = new THREE.Mesh(serversGeometry, materialServersArr)
-      serversModel.name = obj.name + item.name
-      serversModel.position.set(
-        positionX + item.scale.width + configConstant.CABINET_THICK / 2,
-        positionY + item.scale.height / 2 + configConstant.CABINET_THICK + 10, // 每个服务器之间有一个10间隙
-        positionZ
-      )
+      const serversModel = createServer(item, positionX, positionY, positionZ, obj)
       cabinetGroup.add(serversModel)
+      // 如果服务器报警标红，则机柜标红
+      handleWarningC(serversModel, item)
     }
   }
+  cabinetGroup.data = obj
   return cabinetGroup
+}
+
+/**
+ * 创建服务器模型
+ * @param obj 服务器模型数据
+ * @param parentPosX 父机柜已计算好的x轴坐标
+ * @param parentPosY 父机柜已计算好的y轴坐标
+ * @param parentPosZ 父机柜已计算好的z轴坐标
+ * @param parentObj  装服务器的父机柜模型数据
+ **/
+function createServer(obj, parentPosX, parentPosY, parentPosZ, parentObj) {
+  // 创建服务器
+  const serversGeometry = new THREE.BoxBufferGeometry(
+    obj.scale.width,
+    obj.scale.height,
+    obj.scale.depth
+  )
+  const color = obj.deviceStatus ? 0xbbbbbb : 0xff0000
+  const opacity = obj.deviceStatus ? 1 : 0.6
+  const transparent = !obj.deviceStatus
+  const materialBasic = new THREE.MeshBasicMaterial({
+    color: color,
+    opacity: opacity,
+    transparent: transparent
+  })
+  const materialServeBack = new THREE.MeshBasicMaterial({
+    color: color,
+    opacity: opacity,
+    transparent: transparent,
+    map: textureLoader.load(configConstant.FILE_URL + '2.jpg')
+  })
+  const materialServeFront = new THREE.MeshBasicMaterial({
+    color: color,
+    opacity: opacity,
+    transparent: transparent,
+    map: textureLoader.load(configConstant.FILE_URL + '4.jpg')
+  })
+
+  const materialServersArr = []
+  materialServersArr.push(
+    materialBasic,
+    materialBasic,
+    materialBasic,
+    materialBasic,
+    materialServeFront,
+    materialServeBack
+  )
+  const serversModel = new THREE.Mesh(serversGeometry, materialServersArr)
+  serversModel.name = parentObj.name + obj.name
+  serversModel.data = obj
+  // 服务器的位置都是相对机柜的，先得出机柜的位置，然后计算服务器在机柜内部的位置
+  const cabinetPosX = parentPosX + obj.scale.width + configConstant.CABINET_THICK / 2
+  const cabinetPosY = parentPosY + obj.scale.height / 2 + configConstant.CABINET_THICK
+  const cabinetPosZ = parentPosZ
+  serversModel.position.set(
+    cabinetPosX + obj.position.x,
+    cabinetPosY + 10 + obj.position.y, // 每个服务器之间有一个10间隙
+    cabinetPosZ + obj.position.z
+  )
+  return serversModel
+}
+/**
+ * 创建机柜门模型
+ * @param materialDoorBack 门的前面的材质
+ * @param parentPosX 父机柜已计算好的x轴坐标
+ * @param parentPosY 父机柜已计算好的y轴坐标
+ * @param parentPosZ 父机柜已计算好的z轴坐标
+ * @param parentObj  装服务器的父机柜模型数据
+ **/
+function createCabinetDoor(materialDoorBack, parentPosX, parentPosY, parentPosZ, parentObj) {
+  const mapFront = textureLoader.load(
+    configConstant.FILE_URL + 'rack_door_front.jpg'
+  )
+  const materialFront = new THREE.MeshBasicMaterial({
+    map: mapFront
+  })
+  const doorGeometry = new THREE.BoxBufferGeometry(
+    parentObj.scale.width, // + 2 * configConstant.CABINET_THICK, // 加上后会重叠闪烁
+    parentObj.scale.height,
+    configConstant.CABINET_THICK
+  )
+  const materialDoorArr = []
+  materialDoorArr.push(
+    materialDoorBack,
+    materialDoorBack,
+    materialDoorBack,
+    materialDoorBack,
+    materialFront,
+    materialDoorBack
+  )
+  const doorModel = new THREE.Mesh(doorGeometry, materialDoorArr)
+  doorModel.name = parentObj.name + 'doorFront'
+  doorModel.position.set(
+    parentPosX + parentObj.scale.width,
+    parentPosY + parentObj.scale.height / 2 + configConstant.CABINET_THICK / 2,
+    parentPosZ + parentObj.scale.depth / 2 + configConstant.CABINET_THICK / 2
+  )
+  return doorModel
+}
+// TODO 如果服务器报警标红，则机柜标红
+function handleWarningC(serversModel, objData) {
+  // serversModel.parent
+  if (objData.deviceStatus) {
+    return
+  }
+  serversModel.parent.traverse(child => {
+    if (child.isMesh) {
+      // const childC = child.clone()
+      // childC.material.color.set('0xff0000')
+      // childC.material.transparent = !objData.deviceStatus
+      // childC.material.opacity = 0.6
+      // childC.material.needsUpdate = true // 更新纹理
+    }
+  })
 }
 /**
  * 服务器异常时的处理逻辑:
@@ -575,7 +646,9 @@ function createBox(obj) {
   // MeshStandardMaterial
   const boxGeometry = new THREE.BoxGeometry(width, height, depth)
   let skinColor = 0x98750f
-  let boxMaterial = new THREE.MeshLambertMaterial({ color: skinColor })
+  let boxMaterial = new THREE.MeshLambertMaterial({
+    color: skinColor
+  })
   let mapWhole = boxMaterial
 
   let materialTop = boxMaterial
