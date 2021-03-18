@@ -606,9 +606,9 @@ export default {
 
       // 轨迹线
       const path = [
-        new THREE.Vector3(0, 5, 600 / 2 - 50 - 20),
-        new THREE.Vector3(-10, 5, 120),
-        new THREE.Vector3(-150, 5, 120)
+        new THREE.Vector3(0, 65, 600 / 2 - 50 - 20),
+        new THREE.Vector3(-10, 65, 120),
+        new THREE.Vector3(-150, 65, 120)
       ]
 
       this.curve = new THREE.CatmullRomCurve3(
@@ -626,7 +626,7 @@ export default {
        */
       const geometryLine = new THREE.BufferGeometry()
       // 将线条展示出来
-      geometryLine.setFromPoints(points) // 通过点队列设置该 BufferGeometry 的 attribute。
+      // geometryLine.setFromPoints(points) // 通过点队列设置该 BufferGeometry 的 attribute。
 
       geometryLine.vertices = path
       // 使用Line方法将线初始化
