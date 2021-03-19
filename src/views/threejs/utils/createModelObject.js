@@ -1,37 +1,12 @@
-import {
-  Group
-} from '@tweenjs/tween.js'
 import * as THREE from 'three'
 const ThreeBSP = require('three-js-csg')(THREE)
-import {
-  TWEEN
-} from 'three/examples/jsm/libs/tween.module.min.js'
 import {
   CSS2DObject
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 
 import * as configConstant from '@/views/threejs/utils/configConstant'
 
-// 用于生成uuid
-function S4() {
-  return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
-}
-export function guid() {
-  return (
-    S4() +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    S4() +
-    S4()
-  )
-}
+import { Notification, MessageBox, Message } from 'element-ui'
 
 const textureLoader = new THREE.TextureLoader()
 /**
@@ -72,70 +47,70 @@ function createTexture(width, depth, repeatX, repeatY, skinImgUrl) {
 }
 /**
  * 创建地板，并贴图
+ * @param objInitialData 用于建模的原始数据
  */
-function createFloor(obj) {
-  const width = obj.scale.width || 100
-  const height = obj.scale.height || 100
-  const depth = obj.scale.depth || 100
-  const positionX = obj.position.x || 0
-  const positionY = obj.position.y || 0
-  const positionZ = obj.position.z || 0
+function createFloor(objInitialData) {
+  const width = objInitialData.scale.width || 100
+  const height = objInitialData.scale.height || 100
+  const depth = objInitialData.scale.depth || 100
+  const positionX = objInitialData.position.x || 0
+  const positionY = objInitialData.position.y || 0
+  const positionZ = objInitialData.position.z || 0
   const boxGeometry = new THREE.BoxGeometry(
     width,
     height || configConstant.FLOOR_THICK,
     depth
   )
-  const url = configConstant.FILE_URL + obj.style.skinWhole.skinImgUrl
+  const url = configConstant.FILE_URL + objInitialData.style.skinWhole.skinImgUrl
   const material = new THREE.MeshLambertMaterial({
-    color: obj.style.skinWhole.skinColor || 0xffffff,
+    color: objInitialData.style.skinWhole.skinColor || 0xffffff,
     map: createTexture(width, depth, true, true, url) // 颜色贴图
   })
   const model = new THREE.Mesh(boxGeometry, material)
   model.castShadow = true
   model.receiveShadow = true
-  model.uuid = obj.uuid
-  model.name = obj.name
-  model.data = obj
+  model.name = objInitialData.name
+  model.info = objInitialData
   model.position.set(positionX, positionY, positionZ)
   return model
 }
 
 /**
  * 创建墙壁
+ * @param objInitialData 用于建模的原始数据
  */
-function createWall(obj) {
-  const width = obj.scale.width || 100
-  const height = obj.scale.height || 100
-  const depth = obj.scale.depth || 100
-  const positionX = obj.position.x || 0
-  const positionY = obj.position.y || 0
-  const positionZ = obj.position.z || 0
+function createWall(objInitialData) {
+  const width = objInitialData.scale.width || 100
+  const height = objInitialData.scale.height || 100
+  const depth = objInitialData.scale.depth || 100
+  const positionX = objInitialData.position.x || 0
+  const positionY = objInitialData.position.y || 0
+  const positionZ = objInitialData.position.z || 0
   const boxGeometry = new THREE.BoxGeometry(
     width,
     height || configConstant.WALL_HEIGHT,
     depth || configConstant.WALL_THICK
   )
-  const url = configConstant.FILE_URL + obj.style.skinWhole.skinImgUrl
+  const url = configConstant.FILE_URL + objInitialData.style.skinWhole.skinImgUrl
   const material = new THREE.MeshLambertMaterial({
-    color: obj.style.skinWhole.skinColor || 0xffffff,
+    color: objInitialData.style.skinWhole.skinColor || 0xffffff,
     map: createTexture(height, width, true, true, url) // 颜色贴图
   })
 
   const model = new THREE.Mesh(boxGeometry, material)
   model.castShadow = true
   model.receiveShadow = true
-  model.uuid = obj.uuid
-  model.name = obj.name
-  model.data = obj
+  model.name = objInitialData.name
+  model.info = objInitialData
   model.position.set(positionX, positionY, positionZ)
 
   if (
-    obj.rotation != null &&
-    typeof obj.rotation !== 'undefined' &&
-    obj.rotation.length > 0
+    objInitialData.rotation != null &&
+    typeof objInitialData.rotation !== 'undefined' &&
+    objInitialData.rotation.length > 0
   ) {
-    for (let i = 0; i < obj.rotation.length; i++) {
-      const rotationObj = obj.rotation[i]
+    for (let i = 0; i < objInitialData.rotation.length; i++) {
+      const rotationObj = objInitialData.rotation[i]
       switch (rotationObj.direction) {
         case 'x':
           model.rotateX(rotationObj.degree)
@@ -187,39 +162,39 @@ function modelBsp(bsp, objectsCube, material) {
 
 /**
  * 绘制房门
+ * @param objInitialData 用于建模的原始数据
  */
-function createDoor(obj) {
-  const width = obj.scale.width || 100
-  const height = obj.scale.height || 100
-  const depth = obj.scale.depth || 100
-  const positionX = obj.position.x || 0
-  const positionY = obj.position.y || 0
-  const positionZ = obj.position.z || 0
+function createDoor(objInitialData) {
+  const width = objInitialData.scale.width || 100
+  const height = objInitialData.scale.height || 100
+  const depth = objInitialData.scale.depth || 100
+  const positionX = objInitialData.position.x || 0
+  const positionY = objInitialData.position.y || 0
+  const positionZ = objInitialData.position.z || 0
   const boxGeometry = new THREE.BoxGeometry(
     width,
     height || configConstant.WALL_HEIGHT - 30,
     depth || configConstant.WALL_THICK
   )
-  const url = configConstant.FILE_URL + obj.style.skinWhole.skinImgUrl
+  const url = configConstant.FILE_URL + objInitialData.style.skinWhole.skinImgUrl
   const material = new THREE.MeshLambertMaterial({
-    color: obj.style.skinWhole.skinColor || 0xffffff,
+    color: objInitialData.style.skinWhole.skinColor || 0xffffff,
     map: createTexture(width, height, false, false, url) // 颜色贴图
   })
   const model = new THREE.Mesh(boxGeometry, material)
   model.castShadow = true
   model.receiveShadow = true
-  model.uuid = obj.uuid
-  model.name = obj.name
-  model.data = obj
+  model.name = objInitialData.name
+  model.info = objInitialData
   model.position.set(positionX, positionY, positionZ)
 
   if (
-    obj.rotation != null &&
-    typeof obj.rotation !== 'undefined' &&
-    obj.rotation.length > 0
+    objInitialData.rotation != null &&
+    typeof objInitialData.rotation !== 'undefined' &&
+    objInitialData.rotation.length > 0
   ) {
-    for (let i = 0; i < obj.rotation.length; i++) {
-      const rotationObj = obj.rotation[i]
+    for (let i = 0; i < objInitialData.rotation.length; i++) {
+      const rotationObj = objInitialData.rotation[i]
       switch (rotationObj.direction) {
         case 'x':
           model.rotateX(rotationObj.degree)
@@ -247,45 +222,47 @@ function createDoor(obj) {
 }
 /**
  * 创建线模型
+ * @param objInitialData 用于建模的原始数据
  */
-function createLines(obj) {
+function createLines(objInitialData) {
   const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(obj.source.x, obj.source.y, obj.source.z),
-    new THREE.Vector3(obj.target.x, obj.target.y, obj.target.z)
+    new THREE.Vector3(objInitialData.source.x, objInitialData.source.y, objInitialData.source.z),
+    new THREE.Vector3(objInitialData.target.x, objInitialData.target.y, objInitialData.target.z)
   ])
   const points = curve.getPoints(50) // 将曲线划分成的段数
   const geometryLine = new THREE.BufferGeometry().setFromPoints(points)
   let materialLine = null
-  if (obj.style != null && typeof obj.style !== 'undefined') {
+  if (objInitialData.style != null && typeof objInitialData.style !== 'undefined') {
     materialLine = new THREE.LineBasicMaterial({
-      color: obj.style.color,
-      linewidth: obj.style.linewidth
+      color: objInitialData.style.color,
+      linewidth: objInitialData.style.linewidth
     })
   } else {
     materialLine = new THREE.LineBasicMaterial({
-      color: 0xff0000,
+      color: configConstant.DEVICE_COLOR,
       linewidth: 1
     })
   }
   const model = new THREE.Line(geometryLine, materialLine)
-  model.name = obj.name
-  model.data = obj
-  if (obj.position != null && typeof obj.position !== 'undefined') {
-    model.position.set(obj.position.x, obj.position.y, obj.position.z)
+  model.name = objInitialData.name
+  model.info = objInitialData
+  if (objInitialData.position != null && typeof objInitialData.position !== 'undefined') {
+    model.position.set(objInitialData.position.x, objInitialData.position.y, objInitialData.position.z)
   }
   return model
 }
 /**
  * 创建圆柱模型
+ * @param objInitialData 用于建模的原始数据
  */
-function createCylinder(obj) {
-  const radiusTop = obj.scale.radiusTop || 2 // 圆柱的顶部半径，默认值是1。
-  const radiusBottom = obj.scale.radiusBottom || 2 // 圆柱的底部半径，默认值是1。
-  const height = obj.scale.height || 5 // 圆柱的高度，默认值是1。
+function createCylinder(objInitialData) {
+  const radiusTop = objInitialData.scale.radiusTop || 2 // 圆柱的顶部半径，默认值是1。
+  const radiusBottom = objInitialData.scale.radiusBottom || 2 // 圆柱的底部半径，默认值是1。
+  const height = objInitialData.scale.height || 5 // 圆柱的高度，默认值是1。
 
-  const positionX = obj.position.x || 0
-  const positionY = obj.position.y || 0
-  const positionZ = obj.position.z || 0
+  const positionX = objInitialData.position.x || 0
+  const positionY = objInitialData.position.y || 0
+  const positionZ = objInitialData.position.z || 0
 
   const geometry = new THREE.CylinderGeometry(
     radiusTop,
@@ -293,16 +270,16 @@ function createCylinder(obj) {
     height,
     32
   )
-  const url = configConstant.FILE_URL + obj.style.skinWhole.skinImgUrl
+  const url = configConstant.FILE_URL + objInitialData.style.skinWhole.skinImgUrl
   const textureMap = createTexture(
     radiusTop,
     radiusBottom,
-    obj.style.skinWhole.repeatX,
-    obj.style.skinWhole.repeatY,
+    objInitialData.style.skinWhole.repeatX,
+    objInitialData.style.skinWhole.repeatY,
     url
   ) // 颜色贴图
   const material = new THREE.MeshLambertMaterial({
-    color: obj.style.skinWhole.skinColor || 0xffffff
+    color: objInitialData.style.skinWhole.skinColor || 0xffffff
   })
 
   const materialArray = []
@@ -317,17 +294,16 @@ function createCylinder(obj) {
   const model = new THREE.Mesh(geometry, materialArray)
   model.castShadow = true
   model.receiveShadow = true
-  model.uuid = obj.uuid
-  model.name = obj.name
-  model.data = obj
+  model.name = objInitialData.name
+  model.info = objInitialData
   model.position.set(positionX, positionY, positionZ)
   if (
-    obj.rotation != null &&
-    typeof obj.rotation !== 'undefined' &&
-    obj.rotation.length > 0
+    objInitialData.rotation != null &&
+    typeof objInitialData.rotation !== 'undefined' &&
+    objInitialData.rotation.length > 0
   ) {
-    for (let i = 0; i < obj.rotation.length; i++) {
-      const rotationObj = obj.rotation[i]
+    for (let i = 0; i < objInitialData.rotation.length; i++) {
+      const rotationObj = objInitialData.rotation[i]
       switch (rotationObj.direction) {
         case 'x':
           model.rotateX(rotationObj.degree)
@@ -355,28 +331,37 @@ function createCylinder(obj) {
 }
 /**
  * 绘制机柜
+ * @param objInitialData 用于建模的原始数据
  */
-function createCabinet(obj) {
-  const width = obj.scale.width || 100
-  const height = obj.scale.height || 100
-  const depth = obj.scale.depth || 100
-  const positionX = obj.position.x || 0
-  const positionY = obj.position.y || 0
-  const positionZ = obj.position.z || 0
+function createCabinet(objInitialData) {
+  const width = objInitialData.scale.width || 100
+  const height = objInitialData.scale.height || 100
+  const depth = objInitialData.scale.depth || 100
+  const positionX = objInitialData.position.x || 0
+  const positionY = objInitialData.position.y || 0
+  const positionZ = objInitialData.position.z || 0
   const mapBack = textureLoader.load(
     configConstant.FILE_URL + 'rack_door_back.jpg'
   )
   const materialBack = new THREE.MeshBasicMaterial({
     map: mapBack
   })
+  const fontC = createText({
+    text: objInitialData.name,
+    textWidth: 100,
+    textHeight: 40,
+    textSize: 20,
+    textColor: '#ffffff'
+  })
   const materialTexture = new THREE.MeshBasicMaterial({
-    map: new THREE.CanvasTexture(createText(obj.name)) // canvas贴图
+    map: new THREE.CanvasTexture(fontC) // canvas贴图
   })
   // 创建机柜组对象
   const cabinetGroup = new THREE.Group()
-  // cabGroup的平面中心是机柜主体的平面中心
-  // cabGroup.position.set(positionX, positionY, positionZ)
-  cabinetGroup.name = obj.name // 'cabinetGroup'
+  // cabinetGroup的平面中心是机柜主体的平面中心
+  // cabinetGroup.position.set(positionX, positionY, positionZ)
+  cabinetGroup.name = objInitialData.name
+  cabinetGroup.info = objInitialData
 
   // 机柜顶部盒子
   const topGeometry = new THREE.BoxBufferGeometry(
@@ -394,7 +379,7 @@ function createCabinet(obj) {
     materialBack
   )
   const topModel = new THREE.Mesh(topGeometry, materialTopArr)
-  topModel.name = obj.name + 'top'
+  topModel.name = objInitialData.name + '柜体top'
   topModel.position.set(positionX + width, positionY + height, positionZ)
   // 机柜底部盒子
   const bottomGeometry = new THREE.BoxBufferGeometry(
@@ -403,7 +388,7 @@ function createCabinet(obj) {
     depth
   )
   const bottomModel = new THREE.Mesh(bottomGeometry, materialBack)
-  bottomModel.name = obj.name + 'bottom'
+  bottomModel.name = objInitialData.name + '柜体bottom'
   bottomModel.position.set(
     positionX + width,
     positionY + configConstant.CABINET_THICK,
@@ -416,7 +401,7 @@ function createCabinet(obj) {
     configConstant.CABINET_THICK
   )
   const leftModel = new THREE.Mesh(leftGeometry, materialBack)
-  leftModel.name = obj.name + 'left'
+  leftModel.name = objInitialData.name + '柜体left'
   leftGeometry.rotateY(0.5 * Math.PI)
   leftModel.position.set(
     positionX + width / 2 - configConstant.CABINET_THICK / 2,
@@ -430,7 +415,7 @@ function createCabinet(obj) {
     configConstant.CABINET_THICK
   )
   const rightModel = new THREE.Mesh(rightGeometry, materialBack)
-  rightModel.name = obj.name + 'right'
+  rightModel.name = objInitialData.name + '柜体right'
   rightModel.rotateY(0.5 * Math.PI)
   rightModel.position.set(
     positionX + width + width / 2 + configConstant.CABINET_THICK / 2,
@@ -444,7 +429,7 @@ function createCabinet(obj) {
     configConstant.CABINET_THICK
   )
   const backModel = new THREE.Mesh(backGeometry, materialBack)
-  backModel.name = obj.name + 'back'
+  backModel.name = objInitialData.name + '柜体back'
   backModel.position.set(
     positionX + width,
     positionY + height / 2 + configConstant.CABINET_THICK / 2,
@@ -452,43 +437,42 @@ function createCabinet(obj) {
   )
   cabinetGroup.add(topModel, bottomModel, leftModel, rightModel, backModel)
 
-  if (obj.door.isDoor) {
+  if (objInitialData.door.isDoor) {
     // 创建机柜门
-    const doorModel = createCabinetDoor(materialBack, positionX, positionY, positionZ, obj)
+    const doorModel = createCabinetDoor(materialBack, positionX, positionY, positionZ, objInitialData)
     cabinetGroup.add(doorModel)
   }
-  if (obj.servers && obj.servers.length > 0) {
-    for (let i = 0; i < obj.servers.length; i++) {
-      const item = obj.servers[i]
+  if (objInitialData.servers && objInitialData.servers.length > 0) {
+    for (let i = 0; i < objInitialData.servers.length; i++) {
+      const item = objInitialData.servers[i]
       // 创建服务器
-      const serversModel = createServer(item, positionX, positionY, positionZ, obj)
+      const serversModel = createServer(item, positionX, positionY, positionZ, objInitialData)
       cabinetGroup.add(serversModel)
       // 如果服务器报警标红，则机柜标红
       handleWarningC(serversModel, item)
     }
   }
-  cabinetGroup.data = obj
   return cabinetGroup
 }
 
 /**
  * 创建服务器模型
- * @param obj 服务器模型数据
+ * @param objInitialData 服务器模型数据
  * @param parentPosX 父机柜已计算好的x轴坐标
  * @param parentPosY 父机柜已计算好的y轴坐标
  * @param parentPosZ 父机柜已计算好的z轴坐标
  * @param parentObj  装服务器的父机柜模型数据
  **/
-function createServer(obj, parentPosX, parentPosY, parentPosZ, parentObj) {
+function createServer(objInitialData, parentPosX, parentPosY, parentPosZ, parentObj) {
   // 创建服务器
   const serversGeometry = new THREE.BoxBufferGeometry(
-    obj.scale.width,
-    obj.scale.height,
-    obj.scale.depth
+    objInitialData.scale.width,
+    objInitialData.scale.height,
+    objInitialData.scale.depth
   )
-  const color = obj.deviceStatus ? 0xbbbbbb : 0xff0000
-  const opacity = obj.deviceStatus ? 1 : 0.6
-  const transparent = !obj.deviceStatus
+  const color = !objInitialData.deviceStatus ? 0xbbbbbb : configConstant.DEVICE_COLOR
+  const opacity = !objInitialData.deviceStatus ? 1 : 0.9
+  const transparent = objInitialData.deviceStatus
   const materialBasic = new THREE.MeshBasicMaterial({
     color: color,
     opacity: opacity,
@@ -517,16 +501,16 @@ function createServer(obj, parentPosX, parentPosY, parentPosZ, parentObj) {
     materialServeBack
   )
   const serversModel = new THREE.Mesh(serversGeometry, materialServersArr)
-  serversModel.name = parentObj.name + obj.name
-  serversModel.data = obj
+  serversModel.name = objInitialData.name
+  serversModel.info = objInitialData
   // 服务器的位置都是相对机柜的，先得出机柜的位置，然后计算服务器在机柜内部的位置
-  const cabinetPosX = parentPosX + obj.scale.width + configConstant.CABINET_THICK / 2
-  const cabinetPosY = parentPosY + obj.scale.height / 2 + configConstant.CABINET_THICK
+  const cabinetPosX = parentPosX + objInitialData.scale.width + configConstant.CABINET_THICK / 2
+  const cabinetPosY = parentPosY + objInitialData.scale.height / 2 + configConstant.CABINET_THICK
   const cabinetPosZ = parentPosZ
   serversModel.position.set(
-    cabinetPosX + obj.position.x,
-    cabinetPosY + 10 + obj.position.y, // 每个服务器之间有一个10间隙
-    cabinetPosZ + obj.position.z
+    cabinetPosX + objInitialData.position.x,
+    cabinetPosY + 10 + objInitialData.position.y, // 每个服务器之间有一个10间隙
+    cabinetPosZ + objInitialData.position.z
   )
   return serversModel
 }
@@ -537,7 +521,7 @@ function createServer(obj, parentPosX, parentPosY, parentPosZ, parentObj) {
  * @param parentPosY 父机柜已计算好的y轴坐标
  * @param parentPosZ 父机柜已计算好的z轴坐标
  * @param parentObj  装服务器的父机柜模型数据
- **/
+ */
 function createCabinetDoor(materialDoorBack, parentPosX, parentPosY, parentPosZ, parentObj) {
   const mapFront = textureLoader.load(
     configConstant.FILE_URL + 'rack_door_front.jpg'
@@ -560,7 +544,7 @@ function createCabinetDoor(materialDoorBack, parentPosX, parentPosY, parentPosZ,
     materialDoorBack
   )
   const doorModel = new THREE.Mesh(doorGeometry, materialDoorArr)
-  doorModel.name = parentObj.name + 'doorFront'
+  doorModel.name = parentObj.name + '柜体doorFront'
   doorModel.position.set(
     parentPosX + parentObj.scale.width,
     parentPosY + parentObj.scale.height / 2 + configConstant.CABINET_THICK / 2,
@@ -568,67 +552,80 @@ function createCabinetDoor(materialDoorBack, parentPosX, parentPosY, parentPosZ,
   )
   return doorModel
 }
-// TODO 如果服务器报警标红，则机柜标红
-function handleWarningC(serversModel, objData) {
-  // serversModel.parent
-  if (objData.deviceStatus) {
-    return
+/**
+ * 服务器异常时的处理逻辑:
+ * 1.如果服务器异常报警，服务器本身标红；
+ * 2.装该服务器的机柜标红；
+ * 3.机柜顶部显示异常图标,先带有闪烁动画。
+ * @param serversModel 服务器模型数据
+ * @param objInitialData 服务器模型原始数据
+ */
+function handleWarningC(serversModel, objInitialData) {
+  // 如果服务器是正常的则不往下执行了
+  if (!serversModel.info.deviceStatus) {
+    return false
   }
-  serversModel.parent.traverse(child => {
+  // 通过服务器模型的父parent遍历其可见的后代模型
+  serversModel.parent.traverseVisible(child => {
+    // 用于检查这个类或者其派生类是否为网格
     if (child.isMesh) {
-      // const childC = child.clone()
-      // childC.material.color.set('0xff0000')
-      // childC.material.transparent = !objData.deviceStatus
-      // childC.material.opacity = 0.6
-      // childC.material.needsUpdate = true // 更新纹理
+      // 找出符合条件的机柜柜体（包括门总共有6个，事先在创建模型时，为每一个柜体模型手动添加了同类型的name），服务器也是父parent的后代，需要排除
+      if (child.name.includes('柜体')) {
+        if (Array.isArray(child.material) && child.material.length > 0) {
+          child.material.map((item) => {
+            // 要使用setHex()才能把颜色改掉，不能直接使用set方法()
+            item.color.setHex(configConstant.DEVICE_COLOR)
+          })
+        } else {
+          child.material.color.setHex(configConstant.DEVICE_COLOR)
+        }
+        child.material.needsUpdate = true // 更新纹理
+      }
     }
+  })
+  addLabelForCabinet(serversModel.parent, serversModel)
+}
+/**
+ * 机柜顶部显示异常图标,先带有闪烁动画
+ */
+function addLabelForCabinet(cabinetModel, serversModel) {
+  const text = document.createElement('div')
+  text.className = 'label'
+  text.innerHTML = '!'
+  // cabinetModel.name +
+  //   '告警: <br/>' +
+  //   serversModel.name +
+  //   '运行异常'// 显示详细信息
+
+  const label = new CSS2DObject(text)
+  label.position.set(
+    cabinetModel.position.x + cabinetModel.info.scale.width * 2,
+    cabinetModel.position.y + cabinetModel.info.scale.height / 2,
+    cabinetModel.position.z - cabinetModel.info.scale.depth * 2
+  )
+  cabinetModel.add(label)
+  Notification.warning({
+    title: cabinetModel.name + '告警',
+    message: serversModel.name + '运行异常'
   })
 }
 /**
- * 服务器异常时的处理逻辑:
- * 1.机柜门打开
- * 2.服务器标红
- * 3.机柜顶部显示异常图标
- */
-function handleStatus(serversInfo, cabinetInfo, cabinetMesh) {
-  const text = document.createElement('div')
-  text.className = 'label'
-  text.innerHTML =
-    cabinetInfo.name +
-    '告警: <br/>' +
-    serversInfo.name +
-    '运行' +
-    (serversInfo.deviceStatus ? '异常' : '正常') // 显示详细信息
-
-  const label = new CSS2DObject(text)
-  label.position.x = cabinetInfo.position.x + cabinetInfo.size.w
-  label.position.y = cabinetInfo.position.y + cabinetInfo.size.h
-  // label.position.set(
-  //   cabinetInfo.position.x,
-  //   cabinetMesh.position.y + cabinetInfo.size.h,
-  //   cabinetMesh.position.z
-  // )
-  // console.info('po', label.position)
-  cabinetMesh.add(label)
-}
-/**
  * 加载字体
+ * @param textOption 字体基本配置
  **/
-function createText(text) {
-  const width = 100
-  const height = 40
+function createText(textOption) {
   var canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = textOption.textWidth || 40
+  canvas.height = textOption.textHeight || 40
 
   var ctx = canvas.getContext('2d')
-  ctx.fillRect(0, 0, width, height)
+  ctx.fillRect(0, 0, textOption.textWidth, textOption.textHeight)
 
-  ctx.font = 20 + 'px " bold'
-  ctx.fillStyle = '#ffffff'
+  ctx.font = (textOption.textSize || 20) + 'px " bold'
+  ctx.fillStyle = textOption.textColor || '#ffffff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, width / 2, height / 2)
+  ctx.fillText(textOption.text, textOption.textWidth / 2, textOption.textHeight / 2)
   return canvas
 }
 /**
@@ -733,7 +730,6 @@ function createBox(obj) {
   const box = new THREE.Mesh(boxGeometry, boxMaterial)
   box.castShadow = true
   box.receiveShadow = true
-  box.uuid = obj.uuid
   box.name = obj.name
   box.position.set(positionX, positionY, positionZ)
   if (

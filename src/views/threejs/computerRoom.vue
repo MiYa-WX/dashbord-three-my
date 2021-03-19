@@ -55,8 +55,7 @@ import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonCont
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { objectModel, btnsConfig } from '@/views/threejs/utils/modelData'
-// 引入加载器，用于glTF格式的的模型添加
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+
 import {
   createCylinder,
   createFloor,
@@ -65,7 +64,6 @@ import {
   createCabinet,
   createLines,
   // createBox,
-  // guid,
   modelBsp
 } from '@/views/threejs/utils/createModelObject'
 
@@ -346,7 +344,7 @@ export default {
           this.scene.add(obj)
           break
       }
-      console.info('see scene children', this.scene.children)
+      // console.info('see scene children', this.scene.children)
     },
     initFirstPersonControls() {
       this.controls = new FirstPersonControls(
@@ -589,7 +587,7 @@ export default {
       })
       this.circleP = new THREE.Mesh(geometryP, materialP)
       this.circleP.position.set(0, 10, (128 * 3) / 2 + 20)
-      this.scene.add(this.circleP)
+      // this.scene.add(this.circleP)
 
       // const loader = new GLTFLoader()
 
@@ -607,8 +605,8 @@ export default {
       // 轨迹线
       const path = [
         new THREE.Vector3(0, 65, 600 / 2 - 50 - 20),
-        new THREE.Vector3(-10, 65, 120),
-        new THREE.Vector3(-150, 65, 120)
+        new THREE.Vector3(-10, 65, 180),
+        new THREE.Vector3(-150, 65, 180)
       ]
 
       this.curve = new THREE.CatmullRomCurve3(
@@ -658,11 +656,11 @@ export default {
         this.circleP.position.set(point.x, point.y, point.z)
 
         // todo 摄像头模型的视角获取
-        this.controls.target = new THREE.Vector3(point.x, point.y, point.z)
+        // this.controls.target = new THREE.Vector3(point.x, point.y, point.z)
         this.camera.quaternion.slerp(toRot, 0.5)
         this.camera.position.set(point.x, point.y, point.z) // + 80
         // 在轨迹线上移动的摄像头朝向
-        this.camera.lookAt(new THREE.Vector3(point.x, point.y, point.z))
+        this.camera.lookAt(point.x, point.y, point.z)
         this.pos += 0.001
       } else {
         // 回到最初的位置就不要动啦
@@ -768,7 +766,7 @@ export default {
             selectObject.name +
             '<br/>' +
             '运行' +
-            (selectObject.data.deviceStatus ? '异常' : '正常') // 显示详细信息
+            (selectObject.info.deviceStatus ? '正常' : '异常') // 显示详细信息
         }
       }, 250)
     },
@@ -832,7 +830,7 @@ export default {
     },
     openServers(selectObject) {
       const scale = selectObject.geometry.parameters
-      if (!selectObject.data.deviceStatus) {
+      if (!selectObject.info.deviceStatus) {
         return
       }
       // 如果服务器在原位置,则执行推出 30是服务器相对于机柜的原位置z坐标
@@ -892,13 +890,19 @@ export default {
 }
 ::v-deep .label {
   background-color: #e6a23c;
-  border-radius: 3px;
-  font-size: 4px;
   color: #ffffff;
-  width: 100px;
-  padding: 5px;
-  height: 50px;
-  line-height: 1;
+  // width: 100px;
+  // height: 50px;
+  // border-radius: 3px;
+  // font-size: 4px;
+  // padding: 5px;
+  // line-height: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 25px;
+  line-height: 30px;
+  text-align: center;
   overflow: auto;
 }
 .toolbar {

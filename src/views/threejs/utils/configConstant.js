@@ -22,3 +22,5 @@ export const CABINET_Z_INIT = 30 // 机柜初始Z轴坐标
 
 export const SERVER_HEIGHT = 20 // 服务器的高度
 
+export const DEVICE_COLOR = 0xff0000 // 异常设备颜色
+

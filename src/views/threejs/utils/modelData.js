@@ -333,7 +333,7 @@ export const objectModel = [
           }
         },
         ip: '192.168.62.71',
-        deviceStatus: 1 // 0正常  1异常
+        deviceStatus: 0 // 0正常  1异常
       },
       {
         show: true,
@@ -357,8 +357,8 @@ export const objectModel = [
             repeaty: false
           }
         },
-        ip: '192.168.62.71',
-        deviceStatus: 0 // 0正常  1异常
+        ip: '192.168.62.72',
+        deviceStatus: 1 // 0正常  1异常
       }
     ]
   },
@@ -447,7 +447,7 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
+      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
@@ -472,7 +472,7 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
@@ -497,7 +497,7 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
+      x: -configConstant.CABINET_X_INIT,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
@@ -523,6 +523,81 @@ export const objectModel = [
     },
     position: {
       x: -configConstant.CABINET_X_INIT,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '9号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '10号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      y: configConstant.CABINET_Y_INIT,
+      z: configConstant.CABINET_Z_INIT
+    },
+    style: {
+      skinWhole: {
+        skinImgUrl: 'rack_door_back.jpg',
+        repeatx: false,
+        repeaty: false
+      }
+    },
+    door: {
+      isDoor: true
+    }
+  },
+  {
+    show: true,
+    name: '11号机柜',
+    type: 'cabinet',
+    scale: {
+      width: configConstant.CABINET_WIDTH,
+      height: configConstant.CABINET_HEIGHT,
+      depth: configConstant.CABINET_DEPTH
+    },
+    position: {
+      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
