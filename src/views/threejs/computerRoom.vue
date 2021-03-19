@@ -81,6 +81,7 @@ export default {
       isShowLines: false, // 是否开启走线管理
       isShowAuto: false, // 是否开启自动路径巡检
       isPathAuto: false,
+      isShowSmoking: false, // 是否开启模拟烟雾报警
       pos: 0 // 用于控制路径巡检时的坐标偏移量
     }
   },
@@ -412,6 +413,10 @@ export default {
         case 'btnCabinet':
           this.handleAutoCheck()
           break
+        // 模拟烟雾告警
+        case 'btnSmoking':
+          this.handleSmoking()
+          break
         case 'btnConnection':
           this.isShowLines = !this.isShowLines
           if (this.isShowLines) {
@@ -559,6 +564,11 @@ export default {
       } else {
         this.handleReset()
       }
+    },
+    // 模拟烟雾报警
+    handleSmoking() {
+      this.isShowSmoking = !this.isShowSmoking
+      
     },
     /**
      * 用相机(camera)渲染一个场景(scene)

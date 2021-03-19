@@ -665,14 +665,14 @@ export const btnsConfig = [
   //     console.info('告警管理')
   //   }
   // },
-  // {
-  //   btnId: 'btnUsage',
-  //   btnTitle: '烟雾模拟',
-  //   btnIcon: 'el-icon-smoking',
-  //   event: () => {
-  //     console.info('烟雾模拟')
-  //   }
-  // },
+  {
+    btnId: 'btnSmoking',
+    btnTitle: '烟雾模拟',
+    btnIcon: 'el-icon-smoking',
+    event: () => {
+      console.info('烟雾模拟')
+    }
+  },
   {
     btnId: 'btnConnection',
     btnTitle: '走线管理',
