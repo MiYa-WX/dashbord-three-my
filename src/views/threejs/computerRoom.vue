@@ -776,7 +776,7 @@ export default {
             selectObject.name +
             '<br/>' +
             '运行' +
-            (selectObject.info.deviceStatus ? '正常' : '异常') // 显示详细信息
+            (!selectObject.info.deviceStatus ? '正常' : '异常') // 显示详细信息
         }
       }, 250)
     },
@@ -840,8 +840,8 @@ export default {
     },
     openServers(selectObject) {
       const scale = selectObject.geometry.parameters
-      if (!selectObject.info.deviceStatus) {
-        return
+      if (selectObject.info.deviceStatus) {
+        return false
       }
       // 如果服务器在原位置,则执行推出 30是服务器相对于机柜的原位置z坐标
       if (selectObject.position.z === 30) {
