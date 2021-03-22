@@ -23,6 +23,12 @@
       <div id="tooltip"> </div>
       <!-- 渲染性能性能监控器 -->
       <div id="stasWrap"> </div>
+      <!-- 第一人称控制器操作说明 -->
+      <div v-if="isFirstPerson" class="first-dec"
+        >移动鼠标:以指针为中心点移动视角 |
+        上下左右方向键（w，a，s，d）:前后左右移动 | 鼠标左键按下:向前移动 |
+        鼠标右键按下:向后移动 | R:向上移动 | F:向下移动</div
+      >
     </div>
     <div v-else ref="notSuport"> </div>
 
@@ -115,8 +121,8 @@ export default {
     this.createScene()
     this.createLight()
 
-    // 一些辅助对象
-    this.createHelperObject(true, false)
+    // // 一些辅助对象
+    // this.createHelperObject(true, false)
 
     // 添加3D模型
     for (let i = 0; i < objectModel.length; i++) {
@@ -327,21 +333,36 @@ export default {
      * 初始化第一人称控制器
      */
     initFirstPersonControls() {
-      this.controls = new FirstPersonControls(this.camera)
-      this.controls.enabled = true
-      this.controls.lookVertical = false // 是否可以垂直环顾四周
-      this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
-      this.controls.movementSpeed = 1000 // 相机移动速度
-      this.controls.autoForward = false
-      // this.controls.noFly = true
-      // this.controls.constrainVertical = true // 约束垂直
-      // this.controls.verticalMin = 1.0
-      // this.controls.verticalMax = 200.0
-      this.controls.lon = 0 // 进入初始视角x轴的角度
-      this.controls.lat = 10 // 初始视角进入后y轴的角度
-      this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
+      new TWEEN.Tween(this.camera.position)
+        .to(
+          {
+            x: 0,
+            // y: 65,
+            // z: 235
 
-      this.clock = new THREE.Clock()
+            y: 60,
+            z: 180
+          },
+          1500
+        )
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(() => {
+          this.camera.updateProjectionMatrix()
+          this.controls = new FirstPersonControls(this.camera)
+          this.controls.enabled = true
+          this.controls.lookVertical = true // 是否可以垂直环顾四周
+          this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
+          this.controls.movementSpeed = 1000 // 相机移动速度
+          this.controls.constrainVertical = true // 约束垂直
+          this.controls.verticalMin = 1
+          this.controls.verticalMax = 2
+          this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
+          // this.controls.heightMax = 2
+          // this.controls.heightMin = 1
+          // this.controls.heightSpeed = true
+          this.clock = new THREE.Clock()
+        })
+        .start()
     },
     /**
      * 初始化轨道控制器
@@ -424,6 +445,7 @@ export default {
       switch (btnId) {
         // 场景复位
         case 'btnReset':
+          this.initOrbitControls()
           this.handleReset()
           break
         // 开启性能检测
@@ -592,6 +614,7 @@ export default {
         this.circleP = null
         pathLine = null
         this.pos = 0
+        this.initOrbitControls()
         this.handleReset()
       }
     },
@@ -691,6 +714,7 @@ export default {
           })
           .start()
       } else {
+        this.initOrbitControls()
         this.handleReset()
       }
     },
@@ -995,5 +1019,14 @@ export default {
 }
 .video-wrapper {
   width: 100%;
+}
+.first-dec {
+  position: absolute;
+  top: 10px;
+  left: 300px;
+  background: #19304c;
+  color: #19ffff;
+  padding: 5px;
+  z-index: 10;
 }
 </style>
