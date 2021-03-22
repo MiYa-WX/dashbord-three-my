@@ -133,6 +133,13 @@ function createWall(objInitialData) {
       }
     }
   }
+  // TODO 墙上是否有门
+  // if (objInitialData.door.isDoor) {
+  // }
+
+  // TODO 墙上是否有窗户
+  // if (objInitialData.windows.isWindows) {
+  // }
   return model
 }
 
@@ -669,10 +676,10 @@ function addLabelForCabinet(cabinetModel, serversModel) {
     cabinetModel.position.z + cabinetModel.info.scale.depth / 2
   )
   cabinetModel.add(rect)
-  Notification.warning({
-    title: cabinetModel.name + '告警',
-    message: serversModel.name + '运行异常'
-  })
+  // Notification.warning({
+  //   title: cabinetModel.name + '告警',
+  //   message: serversModel.name + '运行异常'
+  // })
 }
 /**
  * 加载字体

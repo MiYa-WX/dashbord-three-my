@@ -4,7 +4,7 @@
       <!-- 操作菜单 -->
       <div id="toolbar" class="toolbar">
         <el-tooltip
-          v-for="(item, index) in btnsConfig"
+          v-for="(item, index) in btnsConfigFilter"
           :key="item.btnId + '_' + index"
           class="btn-item"
           :content="item.btnTitle"
@@ -47,6 +47,7 @@
   </div>
 </template>
 <script>
+import { Message } from 'element-ui'
 import * as THREE from 'three'
 import { WEBGL } from 'three/examples/jsm/WebGL.js'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
@@ -73,14 +74,13 @@ export default {
     return {
       dialogVisible: false,
       cameraName: '',
-      btnsConfig, // 操作按钮配置项
       areaWidth: 0, // 窗口宽度
       areaHeight: 0, // 窗口高度
       isFirstPerson: false, // 是否开启第一人称漫游
       isStats: true, // 是否开启性能检测控件
       isShowLines: false, // 是否开启走线管理
       isShowAuto: false, // 是否开启自动路径巡检
-      isPathAuto: false,
+      isPathAuto: false, // 是否开启路线巡检
       isShowSmoking: false, // 是否开启模拟烟雾报警
       pos: 0 // 用于控制路径巡检时的坐标偏移量
     }
@@ -89,6 +89,12 @@ export default {
     suportWebGL() {
       // WebGL兼容性检查 WEBGL.isWebGLAvailable()
       return WEBGL.isWebGLAvailable()
+    },
+    // 操作按钮配置项,为避免v-for和v-if用在同一个元素上，将btnsConfig过滤后进行绑定
+    btnsConfigFilter() {
+      return btnsConfig.filter((item) => {
+        return item.show
+      })
     }
   },
   mounted() {
@@ -142,23 +148,12 @@ export default {
     this.labelRenderer = null
   },
   methods: {
-    handleDialogClose() {
-      this.dialogVisible = false
-      // 弹框关闭后，暂停播放视频
-      const mediaRef = this.$refs.media
-      mediaRef.pause()
-    },
-    handleDialogOpen(cameraName) {
-      this.dialogVisible = true
-      // 弹框上展示摄像机的名字
-      this.cameraName = cameraName
-    },
     /**
      * 初始化三维场景的中全局变量
      */
     initVariables() {
       this.clickFlag = null // 鼠标单击
-      this.myReqAnima = null // requestAnimationFrame() 开始去执行回调函数的时刻
+      this.myReqAnima = null // requestAnimationFrame() 开始执行回调函数的时刻
       this.roomDom = null // 三维场景放置canvas的dom容器
       this.scene = null // 场景
       this.camera = null // 相机
@@ -171,21 +166,6 @@ export default {
       this.roomDom = document.getElementById('computerRoom')
       this.stats = this.isStats ? this.initStats() : null
       this.mouse = new THREE.Vector2()
-    },
-    updateSpritePosition() {
-      const dpr = window.devicePixelRatio
-
-      const textureSize = 128 * dpr
-      const halfWidth = this.areaWidth / 2
-      const halfHeight = this.areaHeight / 2
-
-      const halfImageWidth = textureSize / 2
-      const halfImageHeight = textureSize / 2
-      this.sprite.position.set(
-        halfWidth - halfImageWidth,
-        -halfHeight + halfImageHeight,
-        1
-      )
     },
     /**
      * 创建渲染器,并设置渲染器的相关参数
@@ -227,7 +207,7 @@ export default {
         100000
       )
       this.camera.name = 'mainCamera'
-      // // 设置摄像机位置
+      // 设置摄像机位置
       this.camera.position.set(0, 900, 1000)
       // 相机指向中心位置
       this.camera.lookAt({ x: 0, y: 0, z: 0 })
@@ -281,7 +261,7 @@ export default {
     },
     /**
      * 根据不同的模型数据，添加相应对象
-     * @param object 模型数据，json格式
+     * @param object 原始模型数据，json格式
      */
     init3DModel(object) {
       if (!object.show) {
@@ -330,9 +310,6 @@ export default {
               const doorOobj = createDoor(item.door)
               this.scene.add(doorOobj)
             }
-            // TODO 墙上是否有窗户
-            // if (item.windows.isWindows) {
-            // }
             this.scene.add(obj)
           }
           break
@@ -345,29 +322,30 @@ export default {
           this.scene.add(obj)
           break
       }
-      // console.info('see scene children', this.scene.children)
     },
+    /**
+     * 初始化第一人称控制器
+     */
     initFirstPersonControls() {
-      this.controls = new FirstPersonControls(
-        this.camera
-        // 不能加这个，否则场景不会移动，也不知道为什么
-        // this.renderer.domElement
-      )
-
+      this.controls = new FirstPersonControls(this.camera)
       this.controls.enabled = true
       this.controls.lookVertical = false // 是否可以垂直环顾四周
       this.controls.lookSpeed = 0.02 // 鼠标移动查看的速度
-      this.controls.movementSpeed = 100 // 相机移动速度
+      this.controls.movementSpeed = 1000 // 相机移动速度
       this.controls.autoForward = false
-      this.controls.noFly = false
-      this.controls.constrainVertical = false // 约束垂直
-      this.controls.verticalMin = 1.0
-      this.controls.verticalMax = 2.0
+      // this.controls.noFly = true
+      // this.controls.constrainVertical = true // 约束垂直
+      // this.controls.verticalMin = 1.0
+      // this.controls.verticalMax = 200.0
       this.controls.lon = 0 // 进入初始视角x轴的角度
-      this.controls.lat = 0 // 初始视角进入后y轴的角度
+      this.controls.lat = 10 // 初始视角进入后y轴的角度
       this.controls.heightCoef = 0.02 // 确定当y分量接近.heightMax时，相机移动的速度。默认值为1。
+
       this.clock = new THREE.Clock()
     },
+    /**
+     * 初始化轨道控制器
+     */
     initOrbitControls() {
       // 鼠标键盘控制
       this.controls = new OrbitControls(
@@ -379,20 +357,76 @@ export default {
       // 视角最远距离
       this.controls.maxDistance = 1600
       // 最大角度
-      this.controls.maxPolarAngle = Math.PI / 1.6
+      this.controls.maxPolarAngle = Math.PI / 1.5
     },
+    /**
+     * 重置控制器
+     */
     resetControls() {
       if (this.controls) {
         this.controls.dispose()
       }
-      this.clock = null
+      if (this.isFirstPerson && this.clock) {
+        this.controls.enabled = false
+        this.clock = null
+      }
       this.controls = null
     },
+    /**
+     * 初始化性能插件
+     */
+    initStats() {
+      const statsTem = new Stats()
+      statsTem.domElement.style.position = 'absolute'
+      statsTem.domElement.style.left = 'auto'
+      statsTem.domElement.style.right = '110px'
+      statsTem.domElement.style.top = '0px'
+      const stasWrapDom = document.getElementById('stasWrap')
+      stasWrapDom.appendChild(statsTem.domElement)
+      return statsTem
+    },
+    /**
+     * 窗口变化的自适应
+     */
+    onWindowResize() {
+      const width = window.innerWidth - 210
+      const height = window.innerHeight - 60
+      this.camera.aspect = width / height
+      // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
+      this.camera.updateProjectionMatrix()
+      // 重置渲染器输出画布canvas尺寸
+      this.renderer.setSize(width, height)
+      this.labelRenderer.setSize(width, height)
+    },
+    /**
+     * 打开视频播放对话框
+     */
+    handleDialogOpen(cameraName) {
+      this.dialogVisible = true
+      // 弹框上展示摄像机的名字
+      this.cameraName = cameraName
+      const mediaRef = this.$refs.media
+      mediaRef.load()
+    },
+    /**
+     * 关闭视频播放对话框
+     */
+    handleDialogClose() {
+      this.dialogVisible = false
+      // 弹框关闭后，暂停播放视频
+      const mediaRef = this.$refs.media
+      mediaRef.pause()
+    },
+    /**
+     * 右上角按钮点击事件，TODO 待优化
+     */
     menuEvent(e, btnId) {
       switch (btnId) {
+        // 场景复位
         case 'btnReset':
           this.handleReset()
           break
+        // 开启性能检测
         case 'btnStats':
           this.isStats = !this.isStats
           if (this.isStats) {
@@ -404,12 +438,15 @@ export default {
             this.stats = null
           }
           break
+        // 路线巡检
         case 'btnAuto':
           this.handleAutoPath()
           break
+        // 第一人称巡检
         case 'btnFirstPerson':
           this.handleFirstPerson()
           break
+        // 机柜自动巡检
         case 'btnCabinet':
           this.handleAutoCheck()
           break
@@ -417,6 +454,7 @@ export default {
         case 'btnSmoking':
           this.handleSmoking()
           break
+        // 走线管理
         case 'btnConnection':
           this.isShowLines = !this.isShowLines
           if (this.isShowLines) {
@@ -446,150 +484,32 @@ export default {
           break
       }
     },
+    /**
+     * 场景复位按钮
+     */
     handleReset() {
       // 场景复位时，先取消第一人称漫游状态
       if (this.isFirstPerson) {
+        this.controls.enabled = false
         this.isFirstPerson = false
-        this.resetControls()
-        this.initOrbitControls()
       }
 
       new TWEEN.Tween(this.camera.position)
         .to(
           {
             x: 0,
-            y: 500,
-            z: 500
+            y: 900,
+            z: 1000
           },
           1000
         )
         .easing(TWEEN.Easing.Quadratic.InOut)
         .start()
-
       this.camera.updateProjectionMatrix()
-      this.controls.reset()
-      this.controls.update()
-    },
-    handleAutoPath() {
-      this.isPathAuto = !this.isPathAuto
-      if (this.isPathAuto) {
-        this.walkAuto()
-      } else {
-        this.circleP.geometry.dispose()
-        this.circleP.material.dispose()
-
-        // this.circleP.traverse((obj) => {
-        //   if (obj.type === 'Mesh') {
-        //     obj.geometry.dispose()
-        //     obj.material.dispose()
-        //   }
-        // })
-
-        let pathLine = this.scene.getObjectByName('巡检路径')
-        pathLine.geometry.dispose()
-        pathLine.material.dispose()
-        this.scene.remove(this.circleP, pathLine)
-        this.circleP = null
-        pathLine = null
-        this.pos = 0
-      }
-    },
-    handleFirstPerson() {
-      this.isFirstPerson = !this.isFirstPerson
-      this.resetControls()
-      if (this.isFirstPerson) {
-        this.initFirstPersonControls()
-      } else {
-        this.initOrbitControls()
-      }
-      console.info('第一人称巡检', this.controls)
-    },
-    handleAutoCheck() {
-      this.isShowAuto = !this.isShowAuto
-      const curObject = this.scene.getObjectByName('1-2号服务器')
-      // const curObjectFront = curObject.getObjectByName('front')
-
-      if (this.isShowAuto) {
-        new TWEEN.Tween(this.camera.position)
-          .to(
-            {
-              x:
-                (curObject.geometry.parameters.width + curObject.position.x) /
-                2,
-              y: 90,
-              z: 85
-            },
-            1000
-          )
-          .easing(TWEEN.Easing.Quadratic.InOut)
-          .onUpdate(() => {
-            this.camera.lookAt(curObject.position)
-
-            this.cameraOrtho = null
-            this.sceneOrtho = null
-            this.cameraOrtho = new THREE.OrthographicCamera(
-              -this.areaWidth / 2,
-              this.areaWidth / 2,
-              this.areaHeight / 2,
-              -this.areaHeight / 2,
-              1,
-              100000
-            )
-            this.cameraOrtho.position.z = 10
-
-            this.sceneOrtho = new THREE.Scene()
-            this.dpr = window.devicePixelRatio
-            this.vector = new THREE.Vector2()
-            this.textureSize = 128 * this.dpr
-            const data = new Uint8Array(this.textureSize * this.textureSize * 3)
-            this.texture = new THREE.DataTexture(
-              data,
-              this.textureSize,
-              this.textureSize,
-              THREE.RGBFormat
-            )
-            this.texture.minFilter = THREE.NearestFilter
-            this.texture.magFilter = THREE.NearestFilter
-
-            const spriteMaterial = new THREE.SpriteMaterial({
-              map: this.texture
-            })
-
-            this.sprite = new THREE.Sprite(spriteMaterial)
-            this.sprite.scale.set(this.textureSize, this.textureSize, 1)
-            this.sceneOrtho.add(this.sprite)
-            this.updateSpritePosition()
-          })
-          .start()
-      } else {
-        this.handleReset()
-      }
-    },
-    // 模拟烟雾报警
-    handleSmoking() {
-      this.isShowSmoking = !this.isShowSmoking
-      
     },
     /**
-     * 用相机(camera)渲染一个场景(scene)
+     * 创建路线巡检中的模型和轨迹
      */
-    render() {
-      TWEEN.update()
-
-      this.isFirstPerson && this.controls.update(this.clock.getDelta())
-      this.stats && this.stats.update()
-      if (this.isPathAuto && this.circleP) {
-        this.updateAuto()
-      }
-      this.renderer.autoClear = false
-      this.renderer.clear()
-      this.renderer.render(this.scene, this.camera)
-      this.labelRenderer.render(this.scene, this.camera)
-      this.renderAuto()
-
-      // 实时渲染
-      this.myReqAnima = requestAnimationFrame(this.render)
-    },
     walkAuto() {
       const geometryP = new THREE.SphereGeometry(10, 32, 32)
       const materialP = new THREE.MeshBasicMaterial({
@@ -643,6 +563,170 @@ export default {
       // 将线添加到场景
       this.scene.add(lineObject)
     },
+    /**
+     * 路线巡检按钮
+     */
+    handleAutoPath() {
+      if (this.isFirstPerson) {
+        Message.warning('正在第一人称巡检,请先结束本次巡检！')
+        return
+      }
+      this.isPathAuto = !this.isPathAuto
+      if (this.isPathAuto) {
+        this.walkAuto()
+      } else {
+        this.circleP.geometry.dispose()
+        this.circleP.material.dispose()
+
+        // this.circleP.traverse((obj) => {
+        //   if (obj.type === 'Mesh') {
+        //     obj.geometry.dispose()
+        //     obj.material.dispose()
+        //   }
+        // })
+
+        let pathLine = this.scene.getObjectByName('巡检路径')
+        pathLine.geometry.dispose()
+        pathLine.material.dispose()
+        this.scene.remove(this.circleP, pathLine)
+        this.circleP = null
+        pathLine = null
+        this.pos = 0
+        this.handleReset()
+      }
+    },
+    /**
+     * 第一人称巡检按钮
+     */
+    handleFirstPerson() {
+      if (this.isPathAuto) {
+        Message.warning('正在自动巡检,请先结束本次巡检！')
+        return
+      }
+      this.isFirstPerson = !this.isFirstPerson
+      this.resetControls()
+      if (this.isFirstPerson) {
+        this.initFirstPersonControls()
+      } else {
+        this.initOrbitControls()
+        this.handleReset()
+      }
+    },
+    /**
+     * 更新精灵位置
+     */
+    updateSpritePosition() {
+      const dpr = window.devicePixelRatio
+
+      const textureSize = 128 * dpr
+      const halfWidth = this.areaWidth / 2
+      const halfHeight = this.areaHeight / 2
+
+      const halfImageWidth = textureSize / 2
+      const halfImageHeight = textureSize / 2
+      this.sprite.position.set(
+        halfWidth - halfImageWidth,
+        -halfHeight + halfImageHeight,
+        1
+      )
+    },
+    /**
+     * 自动巡检机柜按钮
+     */
+    handleAutoCheck() {
+      this.isShowAuto = !this.isShowAuto
+      const curObject = this.scene.getObjectByName('1-2号服务器')
+      // const curObjectFront = curObject.getObjectByName('front')
+
+      if (this.isShowAuto) {
+        new TWEEN.Tween(this.camera.position)
+          .to(
+            {
+              x:
+                (curObject.geometry.parameters.width + curObject.position.x) /
+                2,
+              y: 90,
+              z: 85
+            },
+            1000
+          )
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .onUpdate(() => {
+            this.camera.lookAt(curObject.position)
+
+            this.cameraOrtho = null
+            this.sceneOrtho = null
+            this.cameraOrtho = new THREE.OrthographicCamera(
+              -this.areaWidth / 2,
+              this.areaWidth / 2,
+              this.areaHeight / 2,
+              -this.areaHeight / 2,
+              1,
+              100000
+            )
+            this.cameraOrtho.position.z = 10
+
+            this.sceneOrtho = new THREE.Scene()
+            this.dpr = window.devicePixelRatio
+            this.vector = new THREE.Vector2()
+            this.textureSize = 128 * this.dpr
+            const data = new Uint8Array(this.textureSize * this.textureSize * 3)
+            this.texture = new THREE.DataTexture(
+              data,
+              this.textureSize,
+              this.textureSize,
+              THREE.RGBFormat
+            )
+            this.texture.minFilter = THREE.NearestFilter
+            this.texture.magFilter = THREE.NearestFilter
+
+            const spriteMaterial = new THREE.SpriteMaterial({
+              map: this.texture
+            })
+            // 精灵是一个总是面朝着摄像机的平面，通常含有使用一个半透明的纹理
+            this.sprite = new THREE.Sprite(spriteMaterial)
+            this.sprite.scale.set(this.textureSize, this.textureSize, 1)
+            this.sceneOrtho.add(this.sprite)
+            this.updateSpritePosition()
+          })
+          .start()
+      } else {
+        this.handleReset()
+      }
+    },
+    /**
+     * 模拟烟雾报警
+     */
+    handleSmoking() {
+      this.isShowSmoking = !this.isShowSmoking
+    },
+    /**
+     * 用相机(camera)渲染一个场景(scene)
+     */
+    render() {
+      TWEEN.update()
+      this.stats && this.stats.update()
+      if (this.isFirstPerson) {
+        this.controls.update(this.clock.getDelta())
+      } else {
+        // 这里要在这里更新轨道控制器，是重置控制器相机角度的关键
+        this.controls.update()
+      }
+      if (this.isPathAuto && this.circleP) {
+        this.updateAuto()
+      }
+      this.renderer.autoClear = false
+      this.renderer.clear()
+      this.renderer.render(this.scene, this.camera)
+      this.labelRenderer.render(this.scene, this.camera)
+      this.isShowAuto && this.renderAuto()
+
+      // 实时渲染
+      this.myReqAnima = requestAnimationFrame(this.render)
+    },
+    /**
+     * 路线巡检动画
+     */
     updateAuto() {
       if (this.pos < 1) {
         // const points = this.curve.getPointAt(this.pos)
@@ -681,51 +765,26 @@ export default {
         }
       }
     },
-    renderAuto() {
-      if (this.isShowAuto) {
-        const time = Date.now() * 0.0005
-        const d = 20
-        this.camera.position.y = 100 + Math.cos(time) * d
-        this.vector.x = (this.areaWidth * this.dpr) / 2 - this.textureSize / 2
-        this.vector.y = (this.areaHeight * this.dpr) / 2 - this.textureSize / 2
-
-        // 将当前WebGLFramebuffer中的像素复制到2D纹理中
-        this.renderer.copyFramebufferToTexture(this.vector, this.texture)
-
-        this.renderer.clearDepth()
-        this.renderer.render(this.sceneOrtho, this.cameraOrtho)
-      }
-    },
-    // 初始化性能插件
-    initStats() {
-      const statsTem = new Stats()
-      statsTem.domElement.style.position = 'absolute'
-      statsTem.domElement.style.left = 'auto'
-      statsTem.domElement.style.right = '110px'
-      statsTem.domElement.style.top = '0px'
-      const stasWrapDom = document.getElementById('stasWrap')
-      stasWrapDom.appendChild(statsTem.domElement)
-      return statsTem
-    },
     /**
-     * 窗口变化的自适应
+     * 机柜自动巡检动画
      */
-    onWindowResize() {
-      const width = window.innerWidth - 210
-      const height = window.innerHeight - 60
-      this.camera.aspect = width / height
-      // 更新摄像机投影矩阵。如果相机的一些属性发生了变化，必须被调用。
-      this.camera.updateProjectionMatrix()
-      // this.controls.handleResize()
-      // 重置渲染器输出画布canvas尺寸
-      this.renderer.setSize(width, height)
-      this.labelRenderer.setSize(width, height)
+    renderAuto() {
+      const time = Date.now() * 0.0005
+      const d = 20
+      this.camera.position.y = 100 + Math.cos(time) * d
+      this.vector.x = (this.areaWidth * this.dpr) / 2 - this.textureSize / 2
+      this.vector.y = (this.areaHeight * this.dpr) / 2 - this.textureSize / 2
+
+      // 将当前WebGLFramebuffer中的像素复制到2D纹理中
+      this.renderer.copyFramebufferToTexture(this.vector, this.texture)
+
+      this.renderer.clearDepth()
+      this.renderer.render(this.sceneOrtho, this.cameraOrtho)
     },
     /**
      * 点击事件
      */
     onClick(event) {
-      console.info('onClick')
       clearTimeout(this.clickFlag)
       this.clickFlag = setTimeout(() => {
         event.preventDefault()
@@ -780,6 +839,9 @@ export default {
         }
       }, 250)
     },
+    /**
+     * 房门、机柜门打开关闭
+     */
     openDoor(selectObject) {
       const scale = selectObject.geometry.parameters
 
@@ -838,6 +900,9 @@ export default {
           .start()
       }
     },
+    /**
+     * 服务器推进拉出
+     */
     openServers(selectObject) {
       const scale = selectObject.geometry.parameters
       if (selectObject.info.deviceStatus) {
@@ -871,7 +936,6 @@ export default {
      */
     dbClick(event) {
       event.preventDefault()
-      console.info('dbClick')
       clearTimeout(this.clickFlag)
     }
   }

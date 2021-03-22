@@ -620,6 +620,7 @@ export const btnsConfig = [
   {
     btnId: 'btnReset',
     btnTitle: '场景复位',
+    show: true,
     btnIcon: 'el-icon-refresh-left',
     event: () => {
       console.info('场景复位')
@@ -628,6 +629,7 @@ export const btnsConfig = [
   {
     btnId: 'btnStats',
     btnTitle: '性能监测',
+    show: true,
     btnIcon: 'el-icon-odometer',
     event: () => {
       console.info('性能监测')
@@ -636,6 +638,7 @@ export const btnsConfig = [
   {
     btnId: 'btnAuto',
     btnTitle: '路线巡检',
+    show: true,
     btnIcon: 'el-icon-s-unfold',
     event: () => {
       console.info('路线巡检')
@@ -644,30 +647,34 @@ export const btnsConfig = [
   {
     btnId: 'btnFirstPerson',
     btnTitle: '第一人称巡检',
+    show: true,
     btnIcon: 'el-icon-map-location',
     event: () => {
       console.info('第一人称巡检')
     }
   },
-  // {
-  //   btnId: 'btnCabinet',
-  //   btnTitle: '机柜巡检',
-  //   btnIcon: 'el-icon-thumb',
-  //   event: () => {
-  //     console.info('机柜巡检')
-  //   }
-  // },
-  // {
-  //   btnId: 'btnAlarm',
-  //   btnTitle: '告警管理',
-  //   btnIcon: 'el-icon-warning',
-  //   event: () => {
-  //     console.info('告警管理')
-  //   }
-  // },
+  {
+    btnId: 'btnCabinet',
+    btnTitle: '机柜巡检',
+    show: false,
+    btnIcon: 'el-icon-thumb',
+    event: () => {
+      console.info('机柜巡检')
+    }
+  },
+  {
+    btnId: 'btnAlarm',
+    btnTitle: '告警管理',
+    show: false,
+    btnIcon: 'el-icon-warning',
+    event: () => {
+      console.info('告警管理')
+    }
+  },
   {
     btnId: 'btnSmoking',
     btnTitle: '烟雾模拟',
+    show: false,
     btnIcon: 'el-icon-smoking',
     event: () => {
       console.info('烟雾模拟')
@@ -675,6 +682,7 @@ export const btnsConfig = [
   },
   {
     btnId: 'btnConnection',
+    show: true,
     btnTitle: '走线管理',
     btnIcon: 'el-icon-s-operation',
     event: () => {

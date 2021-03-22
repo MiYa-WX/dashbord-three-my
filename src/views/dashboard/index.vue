@@ -157,7 +157,6 @@ export default {
       // var cube = new THREE.Mesh(geometry11, material11)
       // cube.position.z -= 5
       // this.scene.add(cube)
-      // console.info('11111111111', this.scene)
       /**
        * 相机设置
        */
