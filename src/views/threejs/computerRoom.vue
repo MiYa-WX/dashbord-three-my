@@ -445,7 +445,6 @@ export default {
       switch (btnId) {
         // 场景复位
         case 'btnReset':
-          this.initOrbitControls()
           this.handleReset()
           break
         // 开启性能检测
@@ -514,6 +513,7 @@ export default {
       if (this.isFirstPerson) {
         this.controls.enabled = false
         this.isFirstPerson = false
+        this.initOrbitControls()
       }
 
       new TWEEN.Tween(this.camera.position)
@@ -614,7 +614,6 @@ export default {
         this.circleP = null
         pathLine = null
         this.pos = 0
-        this.initOrbitControls()
         this.handleReset()
       }
     },
@@ -714,7 +713,6 @@ export default {
           })
           .start()
       } else {
-        this.initOrbitControls()
         this.handleReset()
       }
     },
