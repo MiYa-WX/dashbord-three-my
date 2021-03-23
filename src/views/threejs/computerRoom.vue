@@ -62,6 +62,7 @@ import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonCont
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { objectModel, btnsConfig } from '@/views/threejs/utils/modelData'
+import * as configConstant from '@/views/threejs/utils/configConstant'
 
 import {
   createCylinder,
@@ -296,14 +297,17 @@ export default {
               }
             }
             obj = createWall(item)
-            // 墙上是否有门
+            // 某一扇墙上是否有门
             if (item.door.isDoor) {
-              const geometryDong = new THREE.BoxGeometry(80, 150 - 30, 2)
+              const geometryDong = new THREE.BoxGeometry(
+                configConstant.DOOR_WIDTH,
+                configConstant.DOOR_HEIGHT,
+                configConstant.WALL_THICK
+              )
               const dongMesh = new THREE.Mesh(geometryDong, obj.material)
-              // TODO 位置这个地方计算有点误差，虽然现在效果是可以的，但是洞的高度不对
               dongMesh.position.set(
                 item.position.x,
-                item.position.y - 30 / 2,
+                item.position.y - configConstant.DOOR_WALL_LENGTH / 2,
                 item.position.z
               )
               dongMesh.name = '门洞'
@@ -426,8 +430,10 @@ export default {
       this.dialogVisible = true
       // 弹框上展示摄像机的名字
       this.cameraName = cameraName
-      const mediaRef = this.$refs.media
-      mediaRef.load()
+      this.$nextTick(() => {
+        const mediaRef = this.$refs.media
+        mediaRef.load()
+      })
     },
     /**
      * 关闭视频播放对话框
@@ -565,7 +571,7 @@ export default {
         path,
         false // 是否闭合
       )
-      const points = this.curve.getPoints(1000)
+      // const points = this.curve.getPoints(1000)
       // 定义线的基本材料，我们可以使用LineBasicMaterial（实线材料）和LineDashedMaterial（虚线材料）
       const material = new THREE.LineBasicMaterial({
         color: 0xff0000

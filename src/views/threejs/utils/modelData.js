@@ -9,7 +9,11 @@ export const objectModel = [
     name: 'floor',
     type: 'floor',
     position: { x: 0, y: 0, z: 0 },
-    scale: { width: 1000, height: configConstant.FLOOR_THICK, depth: 600 },
+    scale: {
+      width: configConstant.FLOOR_WIDTH,
+      height: configConstant.FLOOR_THICK,
+      depth: configConstant.FLOOR_LENGTH
+    },
     /**
      * rotation:模型旋转配置
      * direction: x|y|z 表示旋转方向
@@ -49,7 +53,7 @@ export const objectModel = [
       z: 0
     },
     scale: {
-      width: 900,
+      width: configConstant.WALL_X_WIDTH,
       height: configConstant.WALL_HEIGHT,
       depth: configConstant.WALL_THICK
     },
@@ -67,10 +71,10 @@ export const objectModel = [
         position: {
           x: 0,
           y: wallY,
-          z: 600 / 2 - 50
+          z: configConstant.FLOOR_LENGTH / 2 - configConstant.WALL_Z_LENGTH
         }, // z轴方向是地板depth的一半，距离边沿50
         scale: {
-          width: 900,
+          width: configConstant.WALL_X_WIDTH,
           height: configConstant.WALL_HEIGHT,
           depth: configConstant.WALL_THICK
         },
@@ -81,12 +85,12 @@ export const objectModel = [
           type: 'box',
           position: {
             x: 0,
-            y: wallY - 30 / 2,
-            z: 600 / 2 - 50
+            y: wallY - configConstant.DOOR_WALL_LENGTH / 2,
+            z: configConstant.FLOOR_LENGTH / 2 - configConstant.WALL_Z_LENGTH
           },
           scale: {
-            width: 80,
-            height: 150 - 30,
+            width: configConstant.DOOR_WIDTH,
+            height: configConstant.DOOR_HEIGHT,
             depth: configConstant.WALL_THICK
           },
           style: {
@@ -107,10 +111,10 @@ export const objectModel = [
         position: {
           x: 0,
           y: wallY,
-          z: -600 / 2 + 50
+          z: -configConstant.FLOOR_LENGTH / 2 + configConstant.WALL_Z_LENGTH
         },
         scale: {
-          width: 900,
+          width: configConstant.WALL_X_WIDTH,
           height: configConstant.WALL_HEIGHT,
           depth: configConstant.WALL_THICK
         },
@@ -122,12 +126,12 @@ export const objectModel = [
         name: 'wallLeft',
         type: 'box',
         position: {
-          x: -1000 / 2 + 50,
+          x: -configConstant.FLOOR_WIDTH / 2 + configConstant.WALL_X_LENGTH,
           y: wallY,
           z: 0
         },
         scale: {
-          width: 500,
+          width: configConstant.WALL_Z_WIDTH,
           height: configConstant.WALL_HEIGHT,
           depth: configConstant.WALL_THICK
         },
@@ -140,12 +144,12 @@ export const objectModel = [
         name: 'wallRight',
         type: 'box',
         position: {
-          x: 1000 / 2 - 50,
+          x: configConstant.FLOOR_WIDTH / 2 - configConstant.WALL_X_LENGTH,
           y: wallY,
           z: 0
         },
         scale: {
-          width: 500,
+          width: configConstant.WALL_Z_WIDTH,
           height: configConstant.WALL_HEIGHT,
           depth: configConstant.WALL_THICK
         },
@@ -236,9 +240,14 @@ export const objectModel = [
     },
     // TODO 圆柱旋转之后的位置调整还没理清楚
     position: {
-      x: (1000 - 50 * 2) / 2 - 30 / 2 - 0.7 * Math.PI,
+      x:
+        (configConstant.FLOOR_WIDTH - 2 * configConstant.WALL_X_LENGTH) / 2 -
+        30 / 2 -
+        0.7 * Math.PI,
       y: configConstant.WALL_HEIGHT - 10,
-      z: -(600 - 50 * 2) / 2 + 20
+      z:
+        -(configConstant.FLOOR_LENGTH - 2 * configConstant.WALL_Z_LENGTH) / 2 +
+        20
     },
     style: {
       skinWhole: {
@@ -264,9 +273,15 @@ export const objectModel = [
     },
     // TODO 圆柱旋转之后的位置调整还没理清楚
     position: {
-      x: -((1000 - 50 * 2) / 2 - 30 / 2 - 0.5 * Math.PI),
+      x: -(
+        (configConstant.FLOOR_WIDTH - 2 * configConstant.WALL_X_LENGTH) / 2 -
+        30 / 2 -
+        0.5 * Math.PI
+      ),
       y: configConstant.WALL_HEIGHT - 10,
-      z: -(600 - 50 * 2) / 2 + 20
+      z:
+        -(configConstant.FLOOR_LENGTH - 2 * configConstant.WALL_Z_LENGTH) / 2 +
+        20
     },
     style: {
       skinWhole: {
@@ -372,7 +387,10 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH,
+      x:
+        configConstant.CABINET_X_INIT +
+        configConstant.CABINET_WIDTH +
+        configConstant.CABINET_X_LENGTH,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
@@ -397,7 +415,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      x:
+        configConstant.CABINET_X_INIT +
+        2 * (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
@@ -422,7 +442,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: configConstant.CABINET_X_INIT + (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
+      x:
+        configConstant.CABINET_X_INIT +
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
@@ -447,9 +469,13 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      x:
+        -configConstant.CABINET_X_INIT -
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
       y: configConstant.CABINET_Y_INIT,
-      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+      z:
+        configConstant.CABINET_Z_INIT -
+        (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
     style: {
       skinWhole: {
@@ -472,9 +498,13 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
+      x:
+        -configConstant.CABINET_X_INIT -
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
       y: configConstant.CABINET_Y_INIT,
-      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+      z:
+        configConstant.CABINET_Z_INIT -
+        (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
     style: {
       skinWhole: {
@@ -499,7 +529,9 @@ export const objectModel = [
     position: {
       x: -configConstant.CABINET_X_INIT,
       y: configConstant.CABINET_Y_INIT,
-      z: configConstant.CABINET_Z_INIT - (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
+      z:
+        configConstant.CABINET_Z_INIT -
+        (configConstant.CABINET_DEPTH + configConstant.CABINET_Z_LENGTH)
     },
     style: {
       skinWhole: {
@@ -547,7 +579,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
+      x:
+        -configConstant.CABINET_X_INIT -
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH),
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
@@ -572,7 +606,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
+      x:
+        -configConstant.CABINET_X_INIT -
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 2,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
@@ -597,7 +633,9 @@ export const objectModel = [
       depth: configConstant.CABINET_DEPTH
     },
     position: {
-      x: -configConstant.CABINET_X_INIT - (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
+      x:
+        -configConstant.CABINET_X_INIT -
+        (configConstant.CABINET_WIDTH + configConstant.CABINET_X_LENGTH) * 3,
       y: configConstant.CABINET_Y_INIT,
       z: configConstant.CABINET_Z_INIT
     },
