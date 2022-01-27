@@ -22,7 +22,7 @@
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
     "path-to-regexp": "2.4.0",
-    "three": "^0.124.0",
+    "three": "^0.137.0",
     "three-js-csg": "^72.0.0",
     "vue": "2.6.10",
     "vue-router": "3.0.6",
